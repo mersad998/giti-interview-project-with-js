@@ -41,7 +41,7 @@ const CoustomDrawer = props => {
         <CoustomTextComponent style={styles.HeaderTitle}> کاربر {props.user.username} خوش آمدید</CoustomTextComponent>
       </View>
       <View style={styles.Container}>
-        <Item name='آلبوم های من' />
+        <Item name='آلبوم های من' onPress={() => props.navigation.navigate('Home')} />
         <Item name='خروج از حساب' onPress={() => {
           props.userLogout()
         }} />

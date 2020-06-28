@@ -14,7 +14,10 @@ export function* handleAlbumsLoad() {
         console.log(JWTtoken);
 
         const images = yield call(getAllAlbums, JWTtoken);
-        // yield put(setAlbums(images));
+
+        console.log('images in saga :' + images);
+        console.log(images);
+        yield put({ type: ALBUMS.LOAD_SUCCESS, images });
     } catch (error) {
         // yield put(setAlbumsLoadError(error.toString()));
     }

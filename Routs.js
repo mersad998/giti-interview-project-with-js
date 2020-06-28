@@ -1,7 +1,7 @@
 import React from 'react';
-import {fromRight} from 'react-navigation-transitions';
-import {createStackNavigator} from 'react-navigation-stack';
-import {createAppContainer} from 'react-navigation';
+import { fromRight } from 'react-navigation-transitions';
+import { createStackNavigator } from 'react-navigation-stack';
+import { createAppContainer } from 'react-navigation';
 
 // --------------------------------------------[صفحه ها ی برنامه]------------------------------------
 
@@ -17,6 +17,8 @@ import SignUp from 'components/Auth/SignUp/SignUp';
 import Detailes from 'components/DetailesPage/Detailes';
 // افزودن عکس
 import UploadPhoto from 'components/UploadPhoto'
+// صفحه عکس ها
+import Images from 'components/Images'
 
 export default function Routs() {
   const routs = createStackNavigator(
@@ -24,6 +26,7 @@ export default function Routs() {
       SplashScreen,
       LoginPage,
       Home,
+      Images,
       SignUp,
       Detailes,
       UploadPhoto

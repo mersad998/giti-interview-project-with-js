@@ -32,13 +32,13 @@ export const getAllAlbums = (token) => {
             })
             .then(res => {
                 console.log('status 200');
-
-                CheckResponse(res, resolve, reject);
+                resolve(res.data)
+                // CheckResponse(res, resolve, reject);
             })
             .catch(err => {
                 console.log('err in api');
-
-                CheckResponse(err, resolve, reject);
+                reject(err)
+                // CheckResponse(err, resolve, reject);
             });
     });
 };
