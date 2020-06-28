@@ -1,4 +1,4 @@
-import {Text} from 'react-native';
+import { Text } from 'react-native';
 import React from 'react';
 import {
   StyleSheet,
@@ -16,7 +16,7 @@ import {
   Input,
   Label,
 } from 'native-base';
-import {white, purple, lightGray} from 'utils/constants/colors';
+import { white, purple, lightGray } from 'utils/constants/colors';
 import Dash from 'react-native-dash';
 
 // ---------------------------------------------------------------------------
@@ -24,7 +24,7 @@ import Dash from 'react-native-dash';
 
 export const CoustomTextComponent = props => (
   <Text
-    style={[CoustomTextComponentStyles.text, {...props.style}]}
+    style={[CoustomTextComponentStyles.text, { ...props.style }]}
     onPress={props.onPress}>
     {props.children}
   </Text>
@@ -47,7 +47,7 @@ export const MySpinner = props => (
 );
 
 const MySpinnerStyle = StyleSheet.create({
-  Spinner: {alignSelf: 'center'},
+  Spinner: { alignSelf: 'center' },
 });
 
 // ---------------------------------------------------------------------------
@@ -90,27 +90,33 @@ const CoustomButtonComponentStyles = StyleSheet.create({
   text: {
     color: white,
   },
-  cartSpinner: {height: '100%'},
+  cartSpinner: { height: '100%' },
 });
 
 // ---------------------------------------------------------------------------
 // هدر سفارشی استفاده شده در برنامه
 export const MyHeader = props => (
   <>
-  <Header style={HeaderStyels.Container}>
-    {props.onBackPress ? (
-      <TouchableOpacity style={HeaderStyels.Icons} onPress={props.onBackPress}>
-        <Icon type="FontAwesome" name="arrow-left" style={HeaderStyels.Icon} />
-      </TouchableOpacity>
-    ) : null}
-            <Text style={HeaderStyels.Text}>{props.Title}</Text>
-    {props.onPlusPress ? (
-      <TouchableOpacity style={HeaderStyels.Icons} onPress={props.onPlusPress}>
-        <Icon type="FontAwesome" name="plus" style={HeaderStyels.Icon} />
-      </TouchableOpacity>
-    ) : null}
-  </Header>
-  {/* <Dash style={{width:'100%', height:1}} dashGap={10} dashLength={10} dashColor={purple}/> */}
+    <Header style={HeaderStyels.Container}>
+      {props.onBackPress ? (
+        <TouchableOpacity style={HeaderStyels.Icons} onPress={props.onBackPress}>
+          <Icon type="FontAwesome" name="arrow-left" style={HeaderStyels.Icon} />
+        </TouchableOpacity>
+      ) : null}
+      <Text style={HeaderStyels.Text}>{props.Title}</Text>
+      {props.onPlusPress ? (
+        <TouchableOpacity style={HeaderStyels.Icons} onPress={props.onPlusPress}>
+          <Icon type="FontAwesome" name="plus" style={HeaderStyels.Icon} />
+        </TouchableOpacity>
+      ) : null}
+      {props.onHamburgerPress ? (
+        <TouchableOpacity
+          style={HeaderStyels.Icons}
+          onPress={props.onHamburgerPress}>
+          <Icon style={HeaderStyels.Icon} type="FontAwesome" name="bars" />
+        </TouchableOpacity>) : null}
+    </Header>
+    {/* <Dash style={{width:'100%', height:1}} dashGap={10} dashLength={10} dashColor={purple}/> */}
   </>
 );
 
@@ -150,7 +156,7 @@ const HeaderStyels = StyleSheet.create({
       fontFamily: 'IRANSansMobile(FaNum)',
     };
   },
-  Icon: {color: lightGray},
+  Icon: { color: lightGray },
   IconCheck: {
     color: lightGray,
     fontSize: 22,
@@ -163,12 +169,12 @@ export const IconInput = React.forwardRef(
   (props, ref, backgroundColor = white, width = '90%') => (
     <View
       style={[
-        IconInputstyels.Container({backgroundColor, width}),
-        {...props.style},
+        IconInputstyels.Container({ backgroundColor, width }),
+        { ...props.style },
       ]}>
       <Item style={IconInputstyels.Item}>
         <Input
-          style={IconInputstyels.Input({backgroundColor, width})}
+          style={IconInputstyels.Input({ backgroundColor, width })}
           ref={ref}
           onFocus={props.onFocus}
           value={props.value}
@@ -197,7 +203,7 @@ export const IconInput = React.forwardRef(
 );
 
 const IconInputstyels = StyleSheet.create({
-  Container: ({backgroundColor, width}) => {
+  Container: ({ backgroundColor, width }) => {
     return {
       width: width,
       flexDirection: 'row-reverse',
@@ -224,7 +230,7 @@ const IconInputstyels = StyleSheet.create({
     fontSize: 22,
     color: 'gray',
   },
-  Input: ({backgroundColor, width}) => {
+  Input: ({ backgroundColor, width }) => {
     return {
       textAlign: 'right',
       fontSize: 14,

@@ -1,14 +1,32 @@
-import React, {useEffect} from 'react';
-import {View, Image, StyleSheet, Linking} from 'react-native';
-import {lightGray, purple} from 'utils/constants/colors';
-import {CoustomTextComponent} from 'utils/constants/elements';
-import {Spinner} from 'native-base';
+import React, { useEffect } from 'react';
+import { View, Image, StyleSheet, Linking } from 'react-native';
+import { lightGray, purple } from 'utils/constants/colors';
+import { CoustomTextComponent } from 'utils/constants/elements';
+import { Spinner } from 'native-base';
+import { getUser } from '../utils/database/userData'
+import { connect } from 'react-redux';
+import { setUser } from '../../__redux/actions/authActions'
 
-export default function SplashScreen(props) {
-  useEffect(() => {
+
+const SplashScreen = props => {
+
+  const checkUser = async () => {
+    const user = await getUser()
+
     setTimeout(() => {
-      props.navigation.replace('LoginPage');
+      console.log(user);
+
+      if (user && user.token && user.remember) {
+        props.setUser(user)
+        props.navigation.replace('Home');
+      } else {
+        props.navigation.replace('LoginPage');
+      }
     }, 3000);
+  }
+
+  useEffect(() => {
+    checkUser()
   }, []);
 
   const openSite = () => Linking.openURL('https://wsafar.com/index.php');
@@ -70,3 +88,16 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 });
+
+
+const mapStateToProps = state => ({
+  reduxState: state.loginReducer,
+});
+const mapDispatchToProps = dispatch => ({
+  setUser: data => setUser({ data, dispatch }),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(SplashScreen);

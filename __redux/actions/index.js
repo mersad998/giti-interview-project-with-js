@@ -1,8 +1,10 @@
 import { ALBUMS, PHOTOS } from '../constants';
 
-const loadAlbums = () => ({
-    type: ALBUMS.LOAD,
-});
+// Albums
+const loadAlbums = ({ data, dispatch }) => {
+    console.log('in loadAlbums action');
+    dispatch({ type: ALBUMS.LOAD, data })
+};
 
 const setAlbums = albums => ({
     type: ALBUMS.LOAD_SUCCESS,
@@ -14,6 +16,7 @@ const setAlbumsLoadError = error => ({
     error,
 });
 
+// Photos
 const loadAlbumsPhotos = id => ({
     type: PHOTOS.LOAD,
     id,

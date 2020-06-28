@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   StyleSheet,
@@ -9,13 +9,20 @@ import {
   Image,
 } from 'react-native';
 import { lightGray, purple } from 'utils/constants/colors';
-import { MyHeader } from 'utils/constants/elements';
+import { MyHeader, CoustomTextComponent } from 'utils/constants/elements';
 import { NamePicker } from 'utils/modals/NamePicker'
+import { loadAlbums } from '../../../__redux/actions'
+import { connect } from 'react-redux';
+import CustomDrawer from '../../utils/constants/CustomDrawer'
+import SideMenu from 'react-native-side-menu';
 
-export default function Home(props) {
-  const [photos, setPhotos] = useState([1, 1, 1, 1, 1, 1, 1, 1]);
+
+const Home = (props) => {
+  const [photos, setPhotos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
+  const [drawer, setDrawer] = useState(false);
+
 
   const visibleModall = () => {
     setShowModal(true)
@@ -23,12 +30,26 @@ export default function Home(props) {
   const dissmissModall = () => {
     setShowModal(false)
   }
+  function afterToggleDrawer(state) {
+    setTimeout(() => {
+      setDrawer(state);
+    }, 500);
+  }
+  const toggleNavBar = () => setDrawer(prevDrawer => !prevDrawer);
 
-
-  const loadPage = () => { };
+  const loadPage = () => {
+    props.loadAlbums();
+  };
   const gotoDetailes = item => {
     props.navigation.navigate('Detailes', { id: item });
   };
+
+  useEffect(() => {
+    console.log('use effect home');
+
+    loadPage()
+  }, []);
+
 
   const renderItems = (item, index) => {
     return (
@@ -50,36 +71,46 @@ export default function Home(props) {
 
   }
 
-
   return (
-    <>
-      <MyHeader Title="آلبوم عکس شما" onPlusPress={visibleModall} />
+    <SideMenu
+      menu={<CustomDrawer navigation={props.navigation} />}
+      menuPosition="right"
+      onChange={state => {
+        afterToggleDrawer(state);
+      }}
+      isOpen={drawer}
+      bounceBackOnOverdraw={false}>
+      <MyHeader Title="آلبوم عکس شما" onPlusPress={visibleModall} onHamburgerPress={toggleNavBar} />
       <StatusBar backgroundColor="#470425" />
       <NamePicker text='لطفا نام آلبوم جدید را وارد نمایید' visible={showModal} confirm={onSetNewAlbumName} dissmiss={dissmissModall} />
       <View style={styles.Container}>
-        <FlatList
-          style={styles.FlatList}
-          data={photos}
-          maxToRenderPerBatch={8}
-          initialNumToRender={8}
-          windowSize={8}
-          keyExtractor={i => i.ID}
-          renderItem={renderItems}
-          onEndReached={() => {
-            if (!isLoading) {
-              loadPage();
+        {photos && photos.length > 0 ? (
+          <FlatList
+            style={styles.FlatList}
+            data={photos}
+            maxToRenderPerBatch={8}
+            initialNumToRender={8}
+            windowSize={8}
+            keyExtractor={i => i.ID}
+            renderItem={renderItems}
+            onEndReached={() => {
+              if (!isLoading) {
+                loadPage();
+              }
+            }}
+            onEndReachedThreshold={0.9}
+            refreshControl={
+              <RefreshControl
+                refreshing={isLoading}
+                onRefresh={() => loadPage(true)}
+              />
             }
-          }}
-          onEndReachedThreshold={0.9}
-          refreshControl={
-            <RefreshControl
-              refreshing={isLoading}
-              onRefresh={() => loadPage(true)}
-            />
-          }
-        />
+          />
+        ) : (
+            <CoustomTextComponent>آلبومی برای نمایش وجود ندارد</CoustomTextComponent>
+          )}
       </View>
-    </>
+    </SideMenu>
   );
 }
 
@@ -87,6 +118,7 @@ const styles = StyleSheet.create({
   Container: {
     flex: 1,
     alignItems: 'center',
+    justifyContent: 'center',
     backgroundColor: lightGray,
   },
   FlatList: {
@@ -107,3 +139,16 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
   },
 });
+
+const mapStateToProps = state => ({
+  reduxState: state.loginReducer,
+  token: state.loginReducer.token
+});
+const mapDispatchToProps = dispatch => ({
+  loadAlbums: data => loadAlbums({ data, dispatch }),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Home);
