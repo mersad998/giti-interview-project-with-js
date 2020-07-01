@@ -2,11 +2,10 @@ import React, { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Modal from 'react-native-modal';
 import { Text, Button, Icon } from 'native-base';
-import { purple, lightGray} from 'utils/constants/colors';
+import { purple, lightGray } from 'utils/constants/colors';
 import { IconInput, CoustomButtonComponent } from 'utils/constants/elements';
 
 const SelectModal = ({ items, visible, confirm, dissmiss, orMore }) => {
-  const [orMoreValue, setOrMoreValue] = useState(''); // برای تایپ دستی
   return (
     <Modal
       animationOut="fadeOutDown"

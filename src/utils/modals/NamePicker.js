@@ -5,9 +5,9 @@ import { purple } from 'utils/constants/colors';
 import { Text, Button, Spinner } from 'native-base';
 import { IconInput } from 'utils/constants/elements';
 
-
 export const NamePicker = ({ text, visible, confirm, dissmiss }) => {
     const [name, setName] = useState()
+
     return (
         <Modal
             animationOut="fadeOutDown"
@@ -21,7 +21,7 @@ export const NamePicker = ({ text, visible, confirm, dissmiss }) => {
                 <Text style={styles.text}>{text}</Text>
                 <IconInput value={name} onChangeText={setName} />
                 <View style={styles.rowView}>
-                    <Button primary transparent style={styles.button} onPress={() => confirm(name)}>
+                    <Button primary transparent style={styles.button} onPress={() => { if (name) { confirm(name) } }}>
                         <Text style={styles.btnConfirm}>تایید</Text>
                     </Button>
                     <Button danger transparent style={styles.button} onPress={dissmiss}>

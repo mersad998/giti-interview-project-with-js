@@ -158,3 +158,43 @@ export const uploadPhotoApi = async (data) => {
             });
     });
 };
+export const deleteAnAlbumApi = (data) => {
+    const token = 'JWT ' + data.token;
+    const url = selectAlbumUrl + data.data
+    return new Promise(async (resolve, reject) => {
+        await axios
+            .delete(url, {
+                headers: {
+                    Authorization: token,
+                },
+            })
+            .then(res => {
+                console.log('status 200');
+                resolve(res.data)
+            })
+            .catch(err => {
+                console.log('err in api');
+                reject(err)
+            });
+    });
+};
+export const editAnAlbumApi = (data) => {
+    const token = 'JWT ' + data.token;
+    const url = selectAlbumUrl + data.data.prevName;
+    return new Promise(async (resolve, reject) => {
+        await axios
+            .put(url, { name: data.data.newName }, {
+                headers: {
+                    Authorization: token,
+                },
+            })
+            .then(res => {
+                console.log('status 200');
+                resolve(res.data)
+            })
+            .catch(err => {
+                console.log('err in api');
+                reject(err)
+            });
+    });
+};

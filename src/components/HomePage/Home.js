@@ -12,16 +12,24 @@ import {
 import { lightGray, purple } from 'utils/constants/colors';
 import { MyHeader, CoustomTextComponent, MySpinner } from 'utils/constants/elements';
 import { NamePicker } from 'utils/modals/NamePicker'
-import { loadAlbums, addNewAlbum, resetMessages } from '../../../__redux/actions'
+import { loadAlbums, addNewAlbum, resetMessages, deleteAlbum, editAlbum } from '../../../__redux/actions'
 import { connect } from 'react-redux';
 import CustomDrawer from '../../utils/constants/CustomDrawer'
 import SideMenu from 'react-native-side-menu';
 const deviceWidth = Dimensions.get('window').width;
-import { Error, Success } from 'utils/modals/alerts';
+import { Error, Success, Delete } from 'utils/modals/alerts';
+import SelectModal from 'utils/modals/select'
+const txtDelete = 'حذف آلبوم';
+const txtEdit = 'ویرایش نام آلبوم';
+
 
 const Home = (props) => {
   const [showModal, setShowModal] = useState(false);
   const [drawer, setDrawer] = useState(false);
+  const [deleteMsg, setDeleteMsg] = useState('');
+  const [selectedItem, setSelectedItem] = useState('');
+  const [selectModalVisible, setSelectModalVisible] = useState(false);
+  const [showEditNameModal, setShowEditNameModal] = useState(false);
 
   const visibleModall = () => {
     setShowModal(true)
@@ -34,27 +42,56 @@ const Home = (props) => {
       setDrawer(state);
     }, 100);
   }
-  const toggleNavBar = () => setDrawer(prevDrawer => !prevDrawer);
-
+  const toggleNavBar = () => {
+    setDrawer(prevDrawer => !prevDrawer)
+  }
   const loadPage = () => {
     props.loadAlbums();
   };
   const gotoPhotos = item => {
     props.navigation.navigate('Images', { albumName: item.item.name })
   };
-
+  const resetDeleteMsg = () => {
+    setDeleteMsg('')
+  }
+  const showDeleteMsg = () => {
+    let msg = 'آیا برای حذف آلبوم ' + selectedItem + ' مطمئن هستید ؟'
+    setDeleteMsg(msg)
+  }
+  const onConfirmDelete = () => {
+    resetDeleteMsg()
+    props.deleteAlbum(selectedItem);
+    loadPage()
+  }
+  const showSelectModal = (name) => {
+    setSelectedItem(name)
+    setSelectModalVisible(true)
+  }
+  const dissmissSelectModal = () => {
+    setSelectModalVisible(false)
+  }
+  const onChooseNewName = (newName) => {
+    setShowEditNameModal(false)
+    let model = {
+      prevName: selectedItem,
+      newName: newName
+    }
+    props.editAlbum(model)
+    loadPage()
+  }
   useEffect(() => {
     console.log('use effect home');
 
     loadPage()
   }, []);
 
-
   const renderItems = (item, index) => {
     return (
       <TouchableOpacity
         style={styles.CartContainer}
-        onPress={() => gotoPhotos(item)}>
+        onPress={() => gotoPhotos(item)}
+        onLongPress={() => { showSelectModal(item.item.name) }}
+      >
         <View style={styles.CardTitle} >
           <CoustomTextComponent>{item.item.name ? item.item.name : 'بدون نام'}</CoustomTextComponent>
         </View>
@@ -91,12 +128,27 @@ const Home = (props) => {
               />
             </View>
           </View>
-
         </View>
-
       </TouchableOpacity>
     );
   };
+
+  const onSelectOperation = (type) => {
+    switch (type) {
+      case txtDelete:
+        dissmissSelectModal()
+        showDeleteMsg()
+        break;
+      case txtEdit:
+        dissmissSelectModal()
+        setShowEditNameModal(true)
+        break;
+      default:
+        dissmissSelectModal()
+        break;
+    }
+    console.log(type);
+  }
 
   const onSetNewAlbumName = (val) => {
     dissmissModall();
@@ -119,7 +171,15 @@ const Home = (props) => {
       <MyHeader Title="آلبوم عکس شما" onPlusPress={visibleModall} onHamburgerPress={toggleNavBar} />
       <StatusBar backgroundColor="#470425" />
       <NamePicker text='لطفا نام آلبوم جدید را وارد نمایید' visible={showModal} confirm={onSetNewAlbumName} dissmiss={dissmissModall} />
+      <NamePicker text='لطفا نام جدید را وارد نمایید' visible={showEditNameModal} confirm={onChooseNewName} dissmiss={() => setShowEditNameModal(false)} />
+
       <View style={styles.Container}>
+        <SelectModal
+          visible={selectModalVisible}
+          dissmiss={dissmissSelectModal}
+          items={[{ Name: txtDelete }, { Name: txtEdit }]}
+          confirm={onSelectOperation}
+        />
         <Error
           visible={props.errorMessage != ''}
           text={props.errorMessage}
@@ -129,6 +189,12 @@ const Home = (props) => {
           visible={props.successMessage != ''}
           text={props.successMessage}
           confirm={onCreatedAlbumCompelete}
+        />
+        <Delete
+          visible={deleteMsg != ''}
+          text={deleteMsg}
+          confirm={onConfirmDelete}
+          dismiss={resetDeleteMsg}
         />
         {props.isLoading ? (
           <>
@@ -215,18 +281,18 @@ const styles = StyleSheet.create({
     justifyContent: 'center'
   }
 });
-
 const mapStateToProps = state => ({
   albums: state.albumsReducer.albums,
   successMessage: state.albumsReducer.successMessage,
   errorMessage: state.albumsReducer.errorMessage,
   isLoading: state.albumsReducer.isLoading
-
 });
 const mapDispatchToProps = dispatch => ({
   loadAlbums: data => loadAlbums({ data, dispatch }),
   addNewAlbum: data => addNewAlbum({ data, dispatch }),
   resetMessages: data => resetMessages({ data, dispatch }),
+  deleteAlbum: data => deleteAlbum({ data, dispatch }),
+  editAlbum: data => editAlbum({ data, dispatch }),
 });
 
 export default connect(

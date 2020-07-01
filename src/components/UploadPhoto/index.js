@@ -57,31 +57,8 @@ const UploadPhoto = props => {
             setErrMessage('این نام از قبل در آلبوم وجود دارد')
             return
         }
-
         try {
             const albumName = props.navigation.getParam('albumName', '')
-            // photos.forEach(e => {
-            //     let formData = new FormData();
-            //     formData.append('title', e.title)
-            //     let localUri = e.path;
-            //     let filename = localUri.split('/').pop();
-            //     let match = /\.(\w+)$/.exec(filename);
-            //     let type = match ? `image/${match[1]}` : 'image';
-            //     formData.append('img', {
-            //         uri: localUri,
-            //         name: filename,
-            //         type,
-            //     });
-            //     let model = {
-            //         formData: formData,
-            //         albumName: albumName
-            //     }
-            //     console.log('type: ' + typeof formData);
-
-            //     props.uploadPhotos(model)
-            //     props.uploadPhotos(formData)
-
-            // })
             let model = photos[0]
             model.albumName = albumName;
             props.uploadPhotos(model)

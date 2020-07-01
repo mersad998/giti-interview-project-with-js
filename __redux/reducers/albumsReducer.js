@@ -27,11 +27,21 @@ const albumsReducer = (state = { albums: [], successMessage: '', errorMessage: '
                 return { ...state, errorMessage: 'خطایی در ایجاد آلبوم . لطفا دوباره تلاش نمایید' };
             }
             break;
-
         case ALBUMS.RESET_MESSAGES:
             return { ...state, errorMessage: '', successMessage: '' };
             break;
-
+        case ALBUMS.DELETE_ALBUM_SUCCESS:
+            return { ...state, successMessage: 'آلبوم با موفقیت حذف شد' };
+            break;
+        case ALBUMS.DELETE_ALBUM_FAILED:
+            return { ...state, errorMessage: 'عملیات انجام نشد . لطفا مجددا تلاش نمایید' };
+            break;
+        case ALBUMS.EDIT_ALBUM_SUCCESS:
+            return { ...state, successMessage: 'نام آلبوم با موفقیت ویرایش شد' };
+            break;
+        case ALBUMS.EDIT_ALBUM_FAILED:
+            return { ...state, errorMessage: 'عملیات انجام نشد . لطفا مجددا تلاش نمایید' };
+            break;
         default:
             return state
             break;
