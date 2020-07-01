@@ -9,30 +9,29 @@ import {
     Image,
     Dimensions
 } from 'react-native';
-import { lightGray, purple } from 'utils/constants/colors';
-import { MyHeader, CoustomTextComponent } from 'utils/constants/elements';
+import { lightGray, purple, white } from 'utils/constants/colors';
+import { MyHeader, CoustomTextComponent, MySpinner } from 'utils/constants/elements';
 import { NamePicker } from 'utils/modals/NamePicker'
-import { loadAlbums } from '../../../__redux/actions'
+import { loadAlbumsPhotos, clearPhotos } from '../../../__redux/actions'
 import { connect } from 'react-redux';
 import CustomDrawer from '../../utils/constants/CustomDrawer'
 import SideMenu from 'react-native-side-menu';
 const deviceWidth = Dimensions.get('window').width;
 
 const Images = (props) => {
-    const [isLoading, setIsLoading] = useState(false);
-    const [showModal, setShowModal] = useState(false);
     const [drawer, setDrawer] = useState(false);
 
-    const visibleModall = () => {
-        setShowModal(true)
+    const onAddIconPress = () => {
+        props.navigation.navigate('UploadPhoto', {
+            albumName: props.navigation.getParam('albumName', ''),
+            photosNames: Array.from(props.photos.map(x => x.title))
+        })
     }
-    const dissmissModall = () => {
-        setShowModal(false)
-    }
+
     function afterToggleDrawer(state) {
         setTimeout(() => {
             setDrawer(state);
-        }, 500);
+        }, 100);
     }
     const toggleNavBar = () => setDrawer(prevDrawer => !prevDrawer);
     const onBackPress = () => {
@@ -40,16 +39,23 @@ const Images = (props) => {
     };
 
     const loadPage = () => {
-        props.loadAlbums();
+        const AlbumName = props.navigation.getParam('albumName', '')
+        props.loadAlbumsPhotos(AlbumName);
     };
     const gotoDetailes = item => {
-        props.navigation.navigate('Detailes', { id: item });
+        console.log(item.item);
+
+        props.navigation.navigate('Detailes', { item: item.item });
     };
 
-    useEffect(() => {
-        console.log('use effect home');
+    const clearPage = () => {
+        props.clearPhotos()
+    }
 
+    useEffect(() => {
+        console.log('use effect Images');
         loadPage()
+        return clearPage
     }, []);
 
 
@@ -57,55 +63,19 @@ const Images = (props) => {
         return (
             <TouchableOpacity
                 style={styles.CartContainer}
-                onPress={() => console.log(item)}>
+                onPress={() => gotoDetailes(item)}>
                 <View style={styles.CardTitle} >
-                    <CoustomTextComponent>{item.item.name ? item.item.name : 'بدون نام'}</CoustomTextComponent>
+                    <CoustomTextComponent style={styles.title}>{item.item.title ? item.item.title : 'بدون نام'}</CoustomTextComponent>
                 </View>
-                <View style={styles.Grid}>
-                    <View style={styles.rowView}>
-                        <View style={styles.Tile}>
-                            <Image
-                                resizeMode={'stretch'}
-                                source={require('assets/logo.png')}
-                                style={styles.Image}
-                            />
-                        </View>
-                        <View style={styles.Tile}>
-                            <Image
-                                resizeMode={'stretch'}
-                                source={require('assets/logo.png')}
-                                style={styles.Image}
-                            />
-                        </View>
-                    </View>
-                    <View style={styles.rowView}>
-                        <View style={styles.Tile}>
-                            <Image
-                                resizeMode={'stretch'}
-                                source={require('assets/logo.png')}
-                                style={styles.Image}
-                            />
-                        </View>
-                        <View style={styles.Tile}>
-                            <Image
-                                resizeMode={'stretch'}
-                                source={require('assets/logo.png')}
-                                style={styles.Image}
-                            />
-                        </View>
-                    </View>
-
-                </View>
+                <Image
+                    resizeMode={'stretch'}
+                    source={{ uri: item.item.img }}
+                    style={styles.Image}
+                />
 
             </TouchableOpacity>
         );
     };
-
-    const onSetNewAlbumName = (val) => {
-        dissmissModall();
-        props.navigation.navigate('UploadPhoto', { name: val })
-
-    }
 
     return (
         <SideMenu
@@ -116,35 +86,42 @@ const Images = (props) => {
             }}
             isOpen={drawer}
             bounceBackOnOverdraw={false}>
-            <MyHeader Title="عکس های آلبوم" onPlusPress={visibleModall} onHamburgerPress={toggleNavBar} onBackPress={onBackPress} />
+            <MyHeader Title="عکس های آلبوم" onPlusPress={onAddIconPress} onHamburgerPress={toggleNavBar} onBackPress={onBackPress} />
             <StatusBar backgroundColor="#470425" />
-            <NamePicker text='لطفا نام آلبوم جدید را وارد نمایید' visible={showModal} confirm={onSetNewAlbumName} dissmiss={dissmissModall} />
             <View style={styles.Container}>
-                {props.albums && props.albums.length > 0 ? (
+                {props.isLoading ? (
+                    <>
+                        <MySpinner />
+                        <CoustomTextComponent>در حال بارگذاری</CoustomTextComponent>
+                    </>
+                ) : null}
+                {props.photos && props.photos.length > 0 && !props.isLoading ? (
                     <FlatList
                         style={styles.FlatList}
-                        data={props.albums}
+                        data={props.photos}
                         maxToRenderPerBatch={8}
                         initialNumToRender={8}
                         windowSize={8}
                         keyExtractor={i => i.ID}
                         renderItem={renderItems}
-                        onEndReached={() => {
-                            if (!isLoading) {
-                                loadPage();
-                            }
-                        }}
+                        // onEndReached={() => {
+                        //     if (!props.isLoading) {
+                        //         loadPage();
+                        //     }
+                        // }}
                         onEndReachedThreshold={0.9}
                         refreshControl={
                             <RefreshControl
-                                refreshing={isLoading}
+                                refreshing={props.isLoading}
                                 onRefresh={() => loadPage(true)}
                             />
                         }
                     />
-                ) : (
-                        <CoustomTextComponent>آلبومی برای نمایش وجود ندارد</CoustomTextComponent>
-                    )}
+                ) : null}
+                {props.photos.length == 0 && !props.isLoading ? (
+                    <CoustomTextComponent>عکسی برای نمایش وجود ندارد</CoustomTextComponent>
+                ) : null}
+
             </View>
         </SideMenu>
     );
@@ -163,29 +140,32 @@ const styles = StyleSheet.create({
     },
     CartContainer: {
         width: deviceWidth - 20,
-        height: deviceWidth - 50,
+        height: deviceWidth - 20,
         margin: 2,
         alignSelf: 'center',
         borderColor: purple,
         borderWidth: 0.5,
-        backgroundColor: purple,
+        backgroundColor: '#e4e9ed',
         borderRadius: 30
-
     }, CardTitle: {
         width: '84%',
         height: 30,
-        backgroundColor: '#c9ccd1',
+        backgroundColor: purple,
         alignSelf: 'center',
         borderBottomRightRadius: 10,
         borderBottomLeftRadius: 10,
         borderColor: 'grey',
         borderWidth: 0.5,
         alignItems: 'center'
+    }, title: {
+        color: white
     },
     Image: {
-        width: '85%',
-        height: '85%',
+        width: '90%',
+        height: '90%',
         alignSelf: 'center',
+        marginTop: '1%',
+        borderRadius: 6
     }, Grid: {
         flex: 1,
         margin: 10
@@ -204,11 +184,13 @@ const styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => ({
-    albums: state.albumsReducer.albums,
-    token: state.loginReducer.token
+    photos: state.photosReducer.photos,
+    isLoading: state.photosReducer.isLoading,
+
 });
 const mapDispatchToProps = dispatch => ({
-    loadAlbums: data => loadAlbums({ data, dispatch }),
+    loadAlbumsPhotos: data => loadAlbumsPhotos({ data, dispatch }),
+    clearPhotos: data => clearPhotos({ data, dispatch }),
 });
 
 export default connect(

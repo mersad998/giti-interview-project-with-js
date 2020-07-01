@@ -11,9 +11,15 @@ const SaveUserInfo = async user => {
     }
 };
 
-const loginReducer = (state = { token: '' }, action) => {
+const loginReducer = (state = { token: '', successMessage: '', errorMessage: '', isLoading: false }, action) => {
 
     switch (action.type) {
+        case AUTH.START_ISLOADING:
+            return { ...state, isLoading: true };
+            break
+        case AUTH.STOP_ISLOADING:
+            return { ...state, isLoading: false };
+            break
         case AUTH.LOGIN_SUCCESS:
 
             console.log('in reducer :');
@@ -31,7 +37,7 @@ const loginReducer = (state = { token: '' }, action) => {
             break;
         case AUTH.LOGIN_FAILURE:
             console.log('login failed');
-            return state
+            return { ...state, errorMessage: 'نام کاربری یا کلمه عبور اشتباه است' };
             break;
         case AUTH.SET_USER:
             console.log('setuser reducer');
@@ -50,6 +56,9 @@ const loginReducer = (state = { token: '' }, action) => {
         case AUTH.LOGOUT:
             return { ...state, user: {} };
             break
+        case AUTH.RESET_MESSAGES:
+            return { ...state, errorMessage: '', successMessage: '' };
+            break;
         default:
             return state
             break;

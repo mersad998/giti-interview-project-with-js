@@ -10,17 +10,16 @@ import {
   Dimensions
 } from 'react-native';
 import { lightGray, purple } from 'utils/constants/colors';
-import { MyHeader, CoustomTextComponent } from 'utils/constants/elements';
+import { MyHeader, CoustomTextComponent, MySpinner } from 'utils/constants/elements';
 import { NamePicker } from 'utils/modals/NamePicker'
-import { loadAlbums } from '../../../__redux/actions'
+import { loadAlbums, addNewAlbum, resetMessages } from '../../../__redux/actions'
 import { connect } from 'react-redux';
 import CustomDrawer from '../../utils/constants/CustomDrawer'
 import SideMenu from 'react-native-side-menu';
 const deviceWidth = Dimensions.get('window').width;
-
+import { Error, Success } from 'utils/modals/alerts';
 
 const Home = (props) => {
-  const [isLoading, setIsLoading] = useState(false);
   const [showModal, setShowModal] = useState(false);
   const [drawer, setDrawer] = useState(false);
 
@@ -33,15 +32,15 @@ const Home = (props) => {
   function afterToggleDrawer(state) {
     setTimeout(() => {
       setDrawer(state);
-    }, 500);
+    }, 100);
   }
   const toggleNavBar = () => setDrawer(prevDrawer => !prevDrawer);
 
   const loadPage = () => {
     props.loadAlbums();
   };
-  const gotoDetailes = item => {
-    props.navigation.navigate('Detailes', { id: item });
+  const gotoPhotos = item => {
+    props.navigation.navigate('Images', { albumName: item.item.name })
   };
 
   useEffect(() => {
@@ -55,7 +54,7 @@ const Home = (props) => {
     return (
       <TouchableOpacity
         style={styles.CartContainer}
-        onPress={() => props.navigation.navigate('Images', { id: item.item.id })}>
+        onPress={() => gotoPhotos(item)}>
         <View style={styles.CardTitle} >
           <CoustomTextComponent>{item.item.name ? item.item.name : 'بدون نام'}</CoustomTextComponent>
         </View>
@@ -64,14 +63,14 @@ const Home = (props) => {
             <View style={styles.Tile}>
               <Image
                 resizeMode={'stretch'}
-                source={item.item.pictures[0] ? { uri: item.item.pictures[0].uri } : require('assets/noImage.png')}
+                source={item.item.pictures[0] ? { uri: item.item.pictures[0] } : require('assets/noImage.png')}
                 style={styles.Image}
               />
             </View>
             <View style={styles.Tile}>
               <Image
                 resizeMode={'stretch'}
-                source={item.item.pictures[1] ? { uri: item.item.pictures[1].uri } : require('assets/noImage.png')}
+                source={item.item.pictures[1] ? { uri: item.item.pictures[1] } : require('assets/noImage.png')}
                 style={styles.Image}
               />
             </View>
@@ -80,14 +79,14 @@ const Home = (props) => {
             <View style={styles.Tile}>
               <Image
                 resizeMode={'stretch'}
-                source={item.item.pictures[2] ? { uri: item.item.pictures[2].uri } : require('assets/noImage.png')}
+                source={item.item.pictures[2] ? { uri: item.item.pictures[2] } : require('assets/noImage.png')}
                 style={styles.Image}
               />
             </View>
             <View style={styles.Tile}>
               <Image
                 resizeMode={'stretch'}
-                source={item.item.pictures[3] ? { uri: item.item.pictures[3].uri } : require('assets/noImage.png')}
+                source={item.item.pictures[3] ? { uri: item.item.pictures[3] } : require('assets/noImage.png')}
                 style={styles.Image}
               />
             </View>
@@ -101,8 +100,11 @@ const Home = (props) => {
 
   const onSetNewAlbumName = (val) => {
     dissmissModall();
-    props.navigation.navigate('UploadPhoto', { name: val })
-
+    props.addNewAlbum(val)
+  }
+  const onCreatedAlbumCompelete = () => {
+    dissmissModall();
+    props.resetMessages();
   }
 
   return (
@@ -118,7 +120,23 @@ const Home = (props) => {
       <StatusBar backgroundColor="#470425" />
       <NamePicker text='لطفا نام آلبوم جدید را وارد نمایید' visible={showModal} confirm={onSetNewAlbumName} dissmiss={dissmissModall} />
       <View style={styles.Container}>
-        {props.albums && props.albums.length > 0 ? (
+        <Error
+          visible={props.errorMessage != ''}
+          text={props.errorMessage}
+          confirm={props.resetMessages}
+        />
+        <Success
+          visible={props.successMessage != ''}
+          text={props.successMessage}
+          confirm={onCreatedAlbumCompelete}
+        />
+        {props.isLoading ? (
+          <>
+            <MySpinner />
+            <CoustomTextComponent>در حال بارگذاری</CoustomTextComponent>
+          </>
+        ) : null}
+        {props.albums && props.albums.length > 0 && !props.isLoading ? (
           <FlatList
             style={styles.FlatList}
             data={props.albums}
@@ -127,22 +145,19 @@ const Home = (props) => {
             windowSize={8}
             keyExtractor={i => i.ID}
             renderItem={renderItems}
-            onEndReached={() => {
-              if (!isLoading) {
-                loadPage();
-              }
-            }}
             onEndReachedThreshold={0.9}
             refreshControl={
               <RefreshControl
-                refreshing={isLoading}
+                refreshing={props.isLoading}
                 onRefresh={() => loadPage(true)}
               />
             }
           />
-        ) : (
-            <CoustomTextComponent>آلبومی برای نمایش وجود ندارد</CoustomTextComponent>
-          )}
+        ) : null}
+        {!props.albums && !props.isLoading ? (
+          <CoustomTextComponent>آلبومی برای نمایش وجود ندارد</CoustomTextComponent>
+        ) : null}
+
       </View>
     </SideMenu>
   );
@@ -203,10 +218,15 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => ({
   albums: state.albumsReducer.albums,
-  token: state.loginReducer.token
+  successMessage: state.albumsReducer.successMessage,
+  errorMessage: state.albumsReducer.errorMessage,
+  isLoading: state.albumsReducer.isLoading
+
 });
 const mapDispatchToProps = dispatch => ({
   loadAlbums: data => loadAlbums({ data, dispatch }),
+  addNewAlbum: data => addNewAlbum({ data, dispatch }),
+  resetMessages: data => resetMessages({ data, dispatch }),
 });
 
 export default connect(

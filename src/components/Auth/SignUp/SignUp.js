@@ -1,27 +1,78 @@
-import React, {useState, useRef} from 'react';
-import {View, StyleSheet, StatusBar, Image} from 'react-native';
-import {lightGray, purple, white} from 'utils/constants/colors';
-import {CoustomTextComponent} from 'utils/constants/elements';
-import {MyHeader, CoustomButtonComponent} from 'utils/constants/elements';
-import {Input, Icon, Item, Content} from 'native-base';
+import React, { useState, useRef, useEffect } from 'react';
+import { View, StyleSheet, StatusBar, Image } from 'react-native';
+import { lightGray, purple, white } from 'utils/constants/colors';
+import { CoustomTextComponent } from 'utils/constants/elements';
+import { MyHeader, CoustomButtonComponent } from 'utils/constants/elements';
+import { Input, Icon, Item, Content } from 'native-base';
+import { useForm } from "react-hook-form";
+import { emailRegex } from 'utils/constants/regex'
+import { Error } from 'utils/modals/alerts';
+import { requestUserSignup } from '../../../../__redux/actions/authActions';
+import { connect } from 'react-redux';
 
-export default function SignUp(props) {
+const SignUp = props => {
+  const { register, setValue, handleSubmit } = useForm();
+  const [errMessage, setErrMessage] = useState('');
   const EmailRef = useRef(null);
   const PasswordRef = useRef(null);
   const RePasswordRef = useRef(null);
 
   const [showPass, setShowPass] = useState(false);
+
+
+  useEffect(() => {
+    console.log('use effect SignUp');
+    register({ name: "username" });
+    register({ name: "email" });
+    register({ name: "password" });
+    register({ name: "passwordRepeat" });
+  }, [register]);
+
+  const onSubmit = data => {
+
+    if (!data.username) {
+      setErrMessage('لطفا نام کاربری خود ر انتخاب نمایید')
+      return
+    } else if (!data.email) {
+      setErrMessage('لطفا پست الکترونیکی خود را وارد نمایید')
+      return
+    } else if (!emailRegex.test(data.email)) {
+      setErrMessage('پست الکترونیکی وارد شده صحیح نمیباشد')
+      return
+    } else if (!data.password) {
+      setErrMessage('لطفا کلمه عبور خود را انتخاب نمایید')
+      return
+    } else if (!data.passwordRepeat) {
+      setErrMessage('لطفا تکرار کلمه عبور را وارد نمایید')
+      return
+    } else if (data.password !== data.passwordRepeat) {
+      setErrMessage('کلمه عبور با تکرار کلمه عبور یکسان نمیباشد')
+      return
+    } else {
+      console.log('send to server');
+      props.requestUserSignup(data)
+    }
+  }
+
+  const resetError = () => {
+    setErrMessage('');
+  };
+
   const changeShowPass = () => setShowPass(!showPass);
 
   const onBackPress = () => {
     props.navigation.goBack();
   };
-  const onSignupClick = () => {};
   return (
     <>
       <MyHeader Title="ثبت نام" onBackPress={onBackPress} />
       <StatusBar backgroundColor="#470425" />
       <Content style={styles.Container}>
+        <Error
+          visible={errMessage != ''}
+          text={errMessage}
+          confirm={resetError}
+        />
         <Image
           source={require('assets/logo.png')}
           resizeMode={'stretch'}
@@ -35,8 +86,8 @@ export default function SignUp(props) {
             placeholder="نام کاربری"
             placeholderTextColor={'gray'}
             style={styles.input}
-            value={props.username}
-            onChangeText={props.onUserChange}
+
+            onChangeText={text => setValue('username', text, false)}
             editable={!props.isLoading}
             returnKeyType="next"
             blurOnSubmit={false}
@@ -53,8 +104,7 @@ export default function SignUp(props) {
             placeholder="پست الکترونیکی"
             placeholderTextColor={'gray'}
             style={styles.input}
-            value={props.username}
-            onChangeText={props.onUserChange}
+            onChangeText={text => setValue('email', text, false)}
             editable={!props.isLoading}
             ref={EmailRef}
             returnKeyType="next"
@@ -78,8 +128,7 @@ export default function SignUp(props) {
             placeholder="کلمه عبور"
             placeholderTextColor={'gray'}
             style={styles.input}
-            value={props.password}
-            onChangeText={props.onPassChange}
+            onChangeText={text => setValue('password', text, false)}
             secureTextEntry={showPass ? false : true}
             editable={!props.isLoading}
             ref={PasswordRef}
@@ -104,8 +153,7 @@ export default function SignUp(props) {
             placeholder="تکرار کلمه عبور"
             placeholderTextColor={'gray'}
             style={styles.input}
-            value={props.password}
-            onChangeText={props.onPassChange}
+            onChangeText={text => setValue('passwordRepeat', text, false)}
             secureTextEntry={showPass ? false : true}
             editable={!props.isLoading}
             ref={RePasswordRef}
@@ -121,7 +169,7 @@ export default function SignUp(props) {
           name="ثبت نام"
           disabled={props.isLoading}
           isLoading={props.isLoading}
-          onPress={onSignupClick}
+          onPress={handleSubmit(onSubmit)}
           style={styles.Button}
         />
       </Content>
@@ -226,3 +274,16 @@ const styles = StyleSheet.create({
     marginTop: 30,
   },
 });
+
+const mapStateToProps = state => ({
+  user: state.loginReducer.user,
+  isLoading: state.loginReducer.isLoading
+});
+const mapDispatchToProps = dispatch => ({
+  requestUserSignup: data => requestUserSignup({ data, dispatch }),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(SignUp);

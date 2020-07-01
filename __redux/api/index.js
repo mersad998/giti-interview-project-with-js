@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { loginUrl, getAllAlbumsUrl } from './urls'
+import { loginUrl, signUpUrl, getAllAlbumsUrl, selectAlbumUrl } from './urls'
 
 export const LoginApi = (data) => {
     return new Promise(async (resolve, reject) => {
@@ -20,7 +20,29 @@ export const LoginApi = (data) => {
             });
     });
 };
+export const SignupApi = (data) => {
+    console.log('in SignupApi :');
+    console.log(data.data);
 
+    return new Promise(async (resolve, reject) => {
+        axios
+            .post(signUpUrl, {
+                username: data.username,
+                email: data.email,
+                password: data.password
+            })
+            .then(res => {
+                console.log('status 200');
+                console.log(res.data);
+                resolve(res.data);
+            })
+            .catch(err => {
+                console.log('err in api');
+                console.log(err);
+                reject(err);
+            });
+    });
+};
 export const getAllAlbums = (token) => {
     console.log('JWT ' + token);
     return new Promise(async (resolve, reject) => {
@@ -33,42 +55,93 @@ export const getAllAlbums = (token) => {
             .then(res => {
                 console.log('status 200');
                 resolve(res.data)
-                // CheckResponse(res, resolve, reject);
             })
             .catch(err => {
                 console.log('err in api');
                 reject(err)
-                // CheckResponse(err, resolve, reject);
             });
     });
 };
+export const addNewAlbumApi = (data) => {
+    console.log(data);
 
+    const token = 'JWT ' + data.token;
+    const url = getAllAlbumsUrl;
+    console.log(url, token);
 
-const CheckResponse = (res, resolve, reject) => {
-    console.log('state 3');
-    console.log(res);
-
-    // switch (res.status) {
-    //     case 200:
-    //         resolve(res.data);
-    //     case 404:
-    //         reject(res);
-    //         throw 'صفحه مورد نظر وجود ندارد';
-    //     case 401:
-    //         reject(res);
-    //         throw 'شما به این متد دسترسی ندارید';
-    //     case 500:
-    //         reject(res);
-    //         return;
-    //     default:
-    //         reject(res);
-    //         throw 'خطای نامشخص در برقراری ارتباط با سرور رخ داده است';
-    // }
+    return new Promise(async (resolve, reject) => {
+        await axios
+            .post(url, { name: data.data }, {
+                headers: {
+                    Authorization: token,
+                },
+            })
+            .then(res => {
+                console.log('status 200');
+                resolve(res.data)
+            })
+            .catch(err => {
+                console.log('err in api');
+                reject(err)
+            });
+    });
 };
+export const getPhotosOfAnAlbum = (data) => {
+    const url = selectAlbumUrl + data.data + '/pictures';
+    const token = 'JWT ' + data.token
+    return new Promise(async (resolve, reject) => {
+        await axios
+            .get(url, {
+                headers: {
+                    Authorization: token,
+                },
+            })
+            .then(res => {
+                console.log('status 200');
+                resolve(res.data)
+            })
+            .catch(err => {
+                console.log('err in api');
+                reject(err)
+            });
+    });
+};
+export const uploadPhotoApi = async (data) => {
+    const token = 'JWT ' + data.token;
+    const url = selectAlbumUrl + data.data.albumName + '/pictures';
+    console.log('in api :');
+    console.log(data);
 
-export const getAlbumsPhotos = () => {
-    // make axios call
-    console.log('getAlbumsPhotos called');
+    let formData = new FormData();
+    formData.append('title', data.data.title);
+    formData.append('desc', data.data.desc ? data.data.desc : '')
+    let localUri = data.data.path;
+    let filename = localUri.split('/').pop();
+    let match = /\.(\w+)$/.exec(filename);
+    let type = match ? `image/${match[1]}` : 'image';
+    console.log(formData);
 
-    return ['img1', 'img2']
-}
+    formData.append('img', {
+        uri: localUri,
+        name: filename,
+        type,
+    });
+
+    return new Promise(async (resolve, reject) => {
+        await axios
+            .post(url, formData, {
+                headers: {
+                    'Content-type': 'multipart/form-data',
+                    Authorization: token,
+                },
+            })
+            .then(res => {
+                console.log('status 200');
+                resolve(res.data)
+            })
+            .catch(err => {
+                console.log('err in api');
+                reject(err)
+            });
+    });
+};

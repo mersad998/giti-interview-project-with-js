@@ -20,6 +20,8 @@ export async function getUser() {
 }
 
 export async function removeUser() {
+    console.log('async storage remove data called');
+
     try {
         await AsyncStorage.removeItem('user');
     } catch (error) {

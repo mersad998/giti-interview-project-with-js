@@ -115,6 +115,12 @@ export const MyHeader = props => (
           onPress={props.onHamburgerPress}>
           <Icon style={HeaderStyels.Icon} type="FontAwesome" name="bars" />
         </TouchableOpacity>) : null}
+      {props.onCheckPress ? (
+        <TouchableOpacity
+          style={HeaderStyels.Icons}
+          onPress={props.onCheckPress}>
+          <Icon style={HeaderStyels.Icon} type="FontAwesome" name="check" />
+        </TouchableOpacity>) : null}
     </Header>
     {/* <Dash style={{width:'100%', height:1}} dashGap={10} dashLength={10} dashColor={purple}/> */}
   </>

@@ -3,11 +3,11 @@ import { all } from 'redux-saga/effects';
 import albumsSaga from './albumsSaga';
 import photosSaga from './photosSaga';
 import userSaga from './authSaga'
-import {login} from './authSaga'
+import { login, signup } from './authSaga'
 
 export default function* rootSaga() {
     try {
-        yield all([albumsSaga(), photosSaga(),login]);
+        yield all([albumsSaga(), photosSaga(), login, signup]);
     } catch (e) {
         console.error(e);
     }

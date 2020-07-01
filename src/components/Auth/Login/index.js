@@ -19,7 +19,7 @@ import {
   Content,
 } from 'native-base';
 import { useForm } from "react-hook-form";
-import { requestUserLogin } from '../../../../__redux/actions/authActions'
+import { requestUserLogin, resetMessages } from '../../../../__redux/actions/authActions'
 
 const LoginPage = props => {
   // console.log('redux state :');
@@ -28,7 +28,7 @@ const LoginPage = props => {
 
   const { register, setValue, handleSubmit } = useForm();
   const [errMessage, setErrMessage] = useState('');
-  const [isLoading, setIsLoading] = useState(false);
+  // const [isLoading, setIsLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const [showPass, setShowPass] = useState(false);
   const passwordRef = useRef(null);
@@ -84,6 +84,11 @@ const LoginPage = props => {
           text={errMessage}
           confirm={resetError}
         />
+        <Error
+          visible={props.errorMessage != ''}
+          text={props.errorMessage}
+          confirm={props.resetMessages}
+        />
 
         <Image
           source={require('assets/logo.png')}
@@ -99,7 +104,7 @@ const LoginPage = props => {
             placeholderTextColor={'gray'}
             style={styles.input}
             onChangeText={text => setValue('username', text, false)}
-            editable={!isLoading}
+            editable={!props.isLoading}
             returnKeyType="next"
             blurOnSubmit={false}
             onSubmitEditing={() => passwordRef.current._root.focus()}
@@ -123,7 +128,7 @@ const LoginPage = props => {
             style={styles.input}
             onChangeText={text => setValue("password", text, false)}
             secureTextEntry={showPass ? false : true}
-            editable={!isLoading}
+            editable={!props.isLoading}
             ref={passwordRef}
 
           />
@@ -148,8 +153,8 @@ const LoginPage = props => {
         <View style={styles.ViewBottom}>
           <CoustomButtonComponent
             name="ورود"
-            disabled={isLoading}
-            isLoading={isLoading}
+            disabled={props.isLoading}
+            isLoading={props.isLoading}
             onPress={handleSubmit(onSubmit)}
           />
 
@@ -245,9 +250,12 @@ const styles = StyleSheet.create({
 
 const mapStateToProps = state => ({
   user: state.loginReducer.user,
+  errorMessage: state.loginReducer.errorMessage,
+  isLoading: state.loginReducer.isLoading
 });
 const mapDispatchToProps = dispatch => ({
   requestUserLogin: data => requestUserLogin({ data, dispatch }),
+  resetMessages: data => resetMessages({ data, dispatch }),
 });
 
 export default connect(

@@ -1,14 +1,20 @@
-import React, { useState } from 'react';
-import { View, Image, StyleSheet, StatusBar, TouchableOpacity } from 'react-native';
-import { lightGray, purple } from 'utils/constants/colors';
+import React, { useState, useRef } from 'react';
+import { View, Image, StyleSheet, StatusBar, TouchableOpacity, TouchableWithoutFeedback, Dimensions, ToastAndroid } from 'react-native';
+import { lightGray, purple, white } from 'utils/constants/colors';
 import { CoustomTextComponent } from 'utils/constants/elements';
 import { MyHeader } from 'utils/constants/elements';
 import SelectModal from 'utils/modals/select'
 import ImagePicker from 'react-native-image-crop-picker';
-import { Icon } from 'native-base'
+import { Icon, Item, Input } from 'native-base'
+import ImageCarousel from 'react-native-image-carousel';
+const deviceWidth = Dimensions.get('window').width;
+import { uploadPhotos, resetPhotosMessages } from '../../../__redux/actions';
+import { connect } from 'react-redux';
+import { Error, Success } from 'utils/modals/alerts';
 
 
-export default function UploadPhoto(props) {
+const UploadPhoto = props => {
+
     const onBackPress = () => {
         props.navigation.goBack();
     };
@@ -16,6 +22,8 @@ export default function UploadPhoto(props) {
     const txtFromGallery = 'گالری';
     const [PickerItemsVisible, setPickerItemsVisible] = useState(false); // مودال انتخاب دوربین یا گالری
     const [photos, setPhotos] = useState([]);
+    const [errMessage, setErrMessage] = useState('');
+    const imagesRef = useRef(null);
 
     const showPickerItems = () => {
         setPickerItemsVisible(true);
@@ -25,29 +33,62 @@ export default function UploadPhoto(props) {
     };
     const onChooseImage = image => {
         console.log(image);
-        // try {
-        //     let formData = new FormData();
-        //     let localUri = img.path;
-        //     let filename = localUri.split('/').pop();
-        //     let match = /\.(\w+)$/.exec(filename);
-        //     let type = match ? `image/${match[1]}` : 'image';
-        //     formData.append('img_1', {
-        //       uri: localUri,
-        //       name: filename,
-        //       type,
-        //     });
-        //     const response = await uploadPhoto(
-        //       UrlAddress.save.saveImage,
-        //       formData,
-        //       login.token,
-        //     ).catch(err => {
-        //       console.log(err);
-        //     });
-        //     console.log(response.data.items);
-        // }catch {
-        //     console.log('err');
-            
-        // }
+
+        let newphotos = [...photos];
+        newphotos.push({ path: image.path, image });
+        setPhotos(newphotos)
+    }
+
+    const resetError = () => {
+        setErrMessage('');
+    };
+    const Save = () => {
+
+        let hatNotTitle = photos.filter(x => !x.title).length;
+        if (+hatNotTitle) {
+            console.log('err');
+            let message = 'تعداد ' + String(hatNotTitle) + ' عکس بدون عنوان وجود  دارد.'
+            setErrMessage(message);
+            return
+        }
+
+        let albumPhotosNames = props.navigation.getParam('photosNames')
+        if (albumPhotosNames && albumPhotosNames.length > 0 && albumPhotosNames.includes(photos[0].title)) {
+            setErrMessage('این نام از قبل در آلبوم وجود دارد')
+            return
+        }
+
+        try {
+            const albumName = props.navigation.getParam('albumName', '')
+            // photos.forEach(e => {
+            //     let formData = new FormData();
+            //     formData.append('title', e.title)
+            //     let localUri = e.path;
+            //     let filename = localUri.split('/').pop();
+            //     let match = /\.(\w+)$/.exec(filename);
+            //     let type = match ? `image/${match[1]}` : 'image';
+            //     formData.append('img', {
+            //         uri: localUri,
+            //         name: filename,
+            //         type,
+            //     });
+            //     let model = {
+            //         formData: formData,
+            //         albumName: albumName
+            //     }
+            //     console.log('type: ' + typeof formData);
+
+            //     props.uploadPhotos(model)
+            //     props.uploadPhotos(formData)
+
+            // })
+            let model = photos[0]
+            model.albumName = albumName;
+            props.uploadPhotos(model)
+
+        } catch {
+            console.log('err');
+        }
 
     }
     const OnSetImage = (type) => {
@@ -65,7 +106,6 @@ export default function UploadPhoto(props) {
                     'خطایی در باز کردن دوربین اتفاق افتاده . لطفا از روش انتخاب از گالری استفاده نمایید یا دسترسی به دوربین را از منوی تنظیمات گوشی خود برای این اپلیکیشن فراهم آورید',
                 );
                 console.log('errrrrrrrrrr');
-                
             }
         } else if (type == txtFromGallery) {
             try {
@@ -84,12 +124,69 @@ export default function UploadPhoto(props) {
         }
         dissmissPickerItems();
     }
+    function renderHeader() {
+        return (
+            <TouchableWithoutFeedback onPress={imagesRef.close}>
+                <View>
+                    <CoustomTextComponent style={styles.closeText} ></CoustomTextComponent>
+                </View>
+            </TouchableWithoutFeedback>
+        );
+    }
+    function renderFooter() {
+        return <CoustomTextComponent style={styles.footerText} ></CoustomTextComponent>
+    }
+    function renderContent(idx) {
+        return (
+            <Image
+                style={styles.Container}
+                source={{ uri: photos[idx].path }}
+                resizeMode={'contain'}
+            />
+        );
+    }
+
+    const handleChangeTitleChange = (title, index) => {
+        let newphotos = [...photos];
+        newphotos[index].title = title
+        setPhotos(newphotos)
+    }
+    const handleChangeDescription = (desc, index) => {
+        let newphotos = [...photos];
+        newphotos[index].desc = desc
+        setPhotos(newphotos)
+    }
+    const showToast = () => {
+        ToastAndroid.show('فعلا فقط یک عکس مجاز میباشد', ToastAndroid.SHORT)
+    }
+    const onAddPhotoCompelete = () => {
+        props.resetPhotosMessages();
+        setTimeout(() => {
+            onBackPress()
+        }, 100);
+    }
+
 
     return (
         <>
-            <MyHeader Title="افزودن عکس" onBackPress={onBackPress} />
+            <MyHeader Title="افزودن عکس" onBackPress={onBackPress} onCheckPress={photos.length > 0 ? Save : null} />
             <StatusBar backgroundColor="#470425" />
             <View style={styles.Container}>
+                <Error
+                    visible={errMessage != ''}
+                    text={errMessage}
+                    confirm={resetError}
+                />
+                <Error
+                    visible={props.errorMessage != ''}
+                    text={props.errorMessage}
+                    confirm={props.resetPhotosMessages}
+                />
+                <Success
+                    visible={props.successMessage != ''}
+                    text={props.successMessage}
+                    confirm={onAddPhotoCompelete}
+                />
                 <SelectModal
                     visible={PickerItemsVisible}
                     dissmiss={dissmissPickerItems}
@@ -113,8 +210,68 @@ export default function UploadPhoto(props) {
                         </View>
                     </>
                 ) : null}
+                {photos && photos.length > 0 ? (
+                    <>
+                        <View style={styles.PhotoContainer}>
+                            <ImageCarousel
+                                ref={imagesRef}
+                                renderContent={renderContent}
+                                renderHeader={renderHeader}
+                                renderFooter={renderFooter}>
+                                {photos.map((url, index) => (
+                                    <>
+                                        <Image
+                                            key={url.path}
+                                            style={styles.sliderImage}
+                                            source={{ uri: url.path }}
+                                            resizeMode={'contain'}
+                                        />
+                                        <Item rounded style={styles.inputItem}>
+                                            <Input
+                                                placeholder="عنوان عکس"
+                                                placeholderTextColor={'gray'}
+                                                style={styles.input}
+                                                onChangeText={txt => handleChangeTitleChange(txt, index)}
+                                            />
+                                            <Icon
+                                                name="pencil"
+                                                type="MaterialCommunityIcons"
+                                                style={styles.inputIcon}
+                                            />
+                                        </Item>
+                                        <Item rounded style={styles.inputItem}>
+                                            <Input
+                                                placeholder="توضیحات عکس"
+                                                placeholderTextColor={'gray'}
+                                                style={styles.input}
+                                                onChangeText={txt => handleChangeDescription(txt, index)}
+                                            />
+                                            <Icon
+                                                name="pencil"
+                                                type="MaterialCommunityIcons"
+                                                style={styles.inputIcon}
+                                            />
+                                        </Item>
+                                    </>
+                                ))}
+                            </ImageCarousel>
 
+                        </View>
+                        <CoustomTextComponent >تعداد عکس های انتخاب شده :{photos.length}</CoustomTextComponent>
 
+                        <View style={styles.ButtonContainer}>
+                            <TouchableOpacity style={styles.iconContainerWithItem} onPress={showToast}>
+                                <Icon
+                                    name="camera"
+                                    type="MaterialCommunityIcons"
+                                    style={styles.iconWithItem}
+                                />
+                            </TouchableOpacity>
+                            <CoustomTextComponent style={styles.AddPic}>افزودن عکس</CoustomTextComponent>
+
+                        </View>
+                    </>
+                ) : null}
             </View>
         </>
     );
@@ -128,7 +285,11 @@ const styles = StyleSheet.create({
     }, noPhotoContainer: {
         flex: 1,
         alignItems: 'center',
-        justifyContent: 'center'
+        justifyContent: 'center',
+    }, PhotoContainer: {
+        flex: 2,
+        alignItems: 'center',
+        justifyContent: 'center',
     }, noPhotoText: {
         color: 'grey'
     }, ButtonContainer: {
@@ -139,6 +300,9 @@ const styles = StyleSheet.create({
         borderTopWidth: 0.5,
     }, icon: {
         fontSize: 50,
+        color: 'grey'
+    }, iconWithItem: {
+        fontSize: 25,
         color: 'grey'
     },
     iconContainer: {
@@ -152,9 +316,58 @@ const styles = StyleSheet.create({
         justifyContent: 'center',
         alignItems: 'center',
         borderRadius: 25
+    }, iconContainerWithItem: {
+        width: 100,
+        height: 100,
+        backgroundColor: lightGray,
+        borderColor: 'grey',
+        borderWidth: 1,
+        alignSelf: 'center',
+        marginTop: 30,
+        justifyContent: 'center',
+        alignItems: 'center',
+        borderRadius: 25
     }, AddPic: {
         alignSelf: 'center',
         color: purple
-    }
+    }, sliderImage: {
+        marginTop: 5,
+        height: 200,
+        width: deviceWidth,
+    }, inputItem: {
+        backgroundColor: white,
+        borderColor: purple,
+        height: 45,
+        borderRadius: 8,
+        width: '80%',
+        alignSelf: 'center',
+        marginTop: 15
+    }, input: {
+        textAlign: 'right',
+        color: purple,
+        paddingLeft: 32,
+        fontFamily: 'IRANSansMobile(FaNum)',
+        fontSize: 14,
+    },
+    inputIcon: {
+        color: purple,
+        fontSize: 20,
+        marginLeft: 5,
+    },
 
 });
+
+const mapStateToProps = state => ({
+    successMessage: state.photosReducer.successMessage,
+    errorMessage: state.photosReducer.errorMessage
+});
+
+const mapDispatchToProps = dispatch => ({
+    uploadPhotos: data => uploadPhotos({ data, dispatch }),
+    resetPhotosMessages: data => resetPhotosMessages({ data, dispatch }),
+});
+
+export default connect(
+    mapStateToProps,
+    mapDispatchToProps,
+)(UploadPhoto);

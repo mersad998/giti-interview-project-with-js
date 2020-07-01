@@ -2,9 +2,10 @@ import React, { useEffect } from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { CoustomTextComponent } from 'utils/constants/elements';
 import { purple, white, lightGray } from './colors';
-import { Icon } from 'native-base';
+import { Icon, Thumbnail } from 'native-base';
 import { connect } from 'react-redux';
-import { userLogout } from '../../../__redux/actions/authActions'
+import { userLogout } from '../../../__redux/actions/authActions';
+import { removeUser } from 'utils/database/userData'
 
 const CoustomDrawer = props => {
 
@@ -16,19 +17,23 @@ const CoustomDrawer = props => {
     }
   }, [props.user]);
 
+  const Logout = async () => {
+    await removeUser()
+    props.userLogout()
+  }
 
-  const Item = ({ name, iconName, onPress }) => {
+  const Item = ({ name, iconName, onPress, tomato }) => {
     return (
       <TouchableOpacity
         style={styles.drawerItemContainer}
         onPress={onPress}>
         <Icon
-          type="FontAwesome5"
+          type="FontAwesome"
           name={iconName}
-          style={styles.drawerItemIcon}
+          style={tomato ? styles.drawerItemIconTomato : styles.drawerItemIcon}
           color={white}
         />
-        <CoustomTextComponent style={styles.drawerItemText}>
+        <CoustomTextComponent style={tomato ? styles.drawerItemTextTomato : styles.drawerItemText}>
           {name}
         </CoustomTextComponent>
       </TouchableOpacity>
@@ -38,13 +43,12 @@ const CoustomDrawer = props => {
   return (
     <>
       <View style={styles.Header}>
+        <Thumbnail source={require('assets/avatar.png')} />
         <CoustomTextComponent style={styles.HeaderTitle}> کاربر {props.user.username} خوش آمدید</CoustomTextComponent>
       </View>
       <View style={styles.Container}>
-        <Item name='آلبوم های من' onPress={() => props.navigation.navigate('Home')} />
-        <Item name='خروج از حساب' onPress={() => {
-          props.userLogout()
-        }} />
+        <Item name='آلبوم های من' iconName='file-image-o' onPress={() => props.navigation.navigate('Home')} />
+        <Item name='خروج از حساب' iconName='sign-out' onPress={Logout} tomato />
       </View>
 
     </>
@@ -59,8 +63,10 @@ const styles = StyleSheet.create({
     backgroundColor: purple,
     borderColor: 'grey',
     borderWidth: 0.5,
-    justifyContent: 'center',
-    padding: 10
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    padding: 10,
+    flexDirection: 'row'
   }, drawerItemContainer: {
     paddingVertical: 10,
     marginHorizontal: 3,
@@ -77,6 +83,15 @@ const styles = StyleSheet.create({
     borderColor: purple
   }, HeaderTitle: {
     color: lightGray
+  }, drawerItemIcon: {
+    color: 'black'
+  }, drawerItemIconTomato: {
+    color: 'tomato'
+  }, drawerItemText: {
+    color: 'black'
+  }, drawerItemTextTomato: {
+    color: 'tomato'
+
   }
 });
 const mapStateToProps = state => ({

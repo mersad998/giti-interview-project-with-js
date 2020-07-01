@@ -16,11 +16,25 @@ const setAlbumsLoadError = error => ({
     error,
 });
 
+const addNewAlbum = ({ data, dispatch }) => {
+    console.log('in addNewAlbum action');
+    dispatch({ type: ALBUMS.ADD_NEW_ALBUM, data })
+};
+
+const resetMessages = ({ data, dispatch }) => {
+    dispatch({ type: ALBUMS.RESET_MESSAGES, data })
+}
+const resetPhotosMessages = ({ data, dispatch }) => {
+    dispatch({ type: PHOTOS.RESET_MESSAGES, data })
+}
+
+
 // Photos
-const loadAlbumsPhotos = id => ({
-    type: PHOTOS.LOAD,
-    id,
-});
+const loadAlbumsPhotos = ({ data, dispatch }) => {
+    console.log('in loadPhotos action');
+    console.log(data);
+    dispatch({ type: PHOTOS.LOAD, data })
+};
 
 const setAlbumsPhotos = (id, downloads) => ({
     type: PHOTOS.LOAD_SUCCESS,
@@ -33,11 +47,26 @@ const setAlbumsPhotosLoadError = id => ({
     id,
 });
 
+const uploadPhotos = ({ data, dispatch }) => {
+    console.log('in uploadPhotos action');
+    dispatch({ type: PHOTOS.UPLOAD_PHOTOS, data })
+};
+
+const clearPhotos = ({ data, dispatch }) => {
+    dispatch({ type: PHOTOS.CLEAR_PHOTOS, data })
+}
+
+
 export {
     loadAlbums,
     setAlbums,
     setAlbumsLoadError,
+    resetMessages,
+    addNewAlbum,
     loadAlbumsPhotos,
     setAlbumsPhotos,
     setAlbumsPhotosLoadError,
+    uploadPhotos,
+    clearPhotos,
+    resetPhotosMessages
 };
