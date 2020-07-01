@@ -11,23 +11,22 @@ import {
 } from 'react-native';
 import { lightGray, purple, white } from 'utils/constants/colors';
 import { MyHeader, CoustomTextComponent, MySpinner } from 'utils/constants/elements';
-import { NamePicker } from 'utils/modals/NamePicker'
 import { loadAlbumsPhotos, clearPhotos } from '../../../__redux/actions'
 import { connect } from 'react-redux';
 import CustomDrawer from '../../utils/constants/CustomDrawer'
 import SideMenu from 'react-native-side-menu';
+import { Content } from 'native-base';
 const deviceWidth = Dimensions.get('window').width;
+const deviceHeight = Dimensions.get('window').height;
 
 const Images = (props) => {
     const [drawer, setDrawer] = useState(false);
-
     const onAddIconPress = () => {
         props.navigation.navigate('UploadPhoto', {
             albumName: props.navigation.getParam('albumName', ''),
             photosNames: Array.from(props.photos.map(x => x.title))
         })
     }
-
     function afterToggleDrawer(state) {
         setTimeout(() => {
             setDrawer(state);
@@ -37,19 +36,20 @@ const Images = (props) => {
     const onBackPress = () => {
         props.navigation.goBack();
     };
-
     const loadPage = () => {
         const AlbumName = props.navigation.getParam('albumName', '')
         props.loadAlbumsPhotos(AlbumName);
     };
     const gotoDetailes = item => {
         console.log(item.item);
-
         props.navigation.navigate('Detailes', { item: item.item });
     };
-
     const clearPage = () => {
         props.clearPhotos()
+    }
+    const hardReload = () => {
+        clearPage();
+        loadPage()
     }
 
     useEffect(() => {
@@ -57,7 +57,6 @@ const Images = (props) => {
         loadPage()
         return clearPage
     }, []);
-
 
     const renderItems = (item, index) => {
         return (
@@ -89,13 +88,13 @@ const Images = (props) => {
             <MyHeader Title="عکس های آلبوم" onPlusPress={onAddIconPress} onHamburgerPress={toggleNavBar} onBackPress={onBackPress} />
             <StatusBar backgroundColor="#470425" />
             <View style={styles.Container}>
-                {props.isLoading ? (
+                {props.isLoading && props.photos.length < 1 ? (
                     <>
                         <MySpinner />
                         <CoustomTextComponent>در حال بارگذاری</CoustomTextComponent>
                     </>
                 ) : null}
-                {props.photos && props.photos.length > 0 && !props.isLoading ? (
+                {props.photos && props.photos.length > 0 ? (
                     <FlatList
                         style={styles.FlatList}
                         data={props.photos}
@@ -104,24 +103,31 @@ const Images = (props) => {
                         windowSize={8}
                         keyExtractor={i => i.ID}
                         renderItem={renderItems}
-                        // onEndReached={() => {
-                        //     if (!props.isLoading) {
-                        //         loadPage();
-                        //     }
-                        // }}
+                        onEndReached={() => {
+                            if (!props.isLoading) {
+                                loadPage();
+                            }
+                        }}
                         onEndReachedThreshold={0.9}
                         refreshControl={
                             <RefreshControl
                                 refreshing={props.isLoading}
-                                onRefresh={() => loadPage(true)}
+                                onRefresh={hardReload}
                             />
                         }
                     />
                 ) : null}
                 {props.photos.length == 0 && !props.isLoading ? (
-                    <CoustomTextComponent>عکسی برای نمایش وجود ندارد</CoustomTextComponent>
+                    <Content
+                        refreshControl={
+                            <RefreshControl
+                                refreshing={props.isLoading}
+                                onRefresh={hardReload}
+                            />
+                        } >
+                        <CoustomTextComponent style={styles.noPhotoText}>عکسی برای نمایش وجود ندارد</CoustomTextComponent>
+                    </Content>
                 ) : null}
-
             </View>
         </SideMenu>
     );
@@ -180,6 +186,8 @@ const styles = StyleSheet.create({
         borderColor: 'grey',
         backgroundColor: lightGray,
         justifyContent: 'center'
+    }, noPhotoText: {
+        marginTop: deviceHeight / 2.5
     }
 });
 

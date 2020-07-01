@@ -87,7 +87,19 @@ export const addNewAlbumApi = (data) => {
     });
 };
 export const getPhotosOfAnAlbum = (data) => {
-    const url = selectAlbumUrl + data.data + '/pictures';
+    console.log(data);
+    let url;
+    if (!data.url) {
+        console.log('endOfPage');
+        return
+    }
+    if (data.url === 'firstLoad') {
+        url = selectAlbumUrl + data.data + '/pictures';
+    } else {
+        console.log('now in api we have new url');
+        url = data.url
+        console.log(data.url);
+    }
     const token = 'JWT ' + data.token
     return new Promise(async (resolve, reject) => {
         await axios
@@ -98,6 +110,7 @@ export const getPhotosOfAnAlbum = (data) => {
             })
             .then(res => {
                 console.log('status 200');
+                console.log(res.data);
                 resolve(res.data)
             })
             .catch(err => {

@@ -2,18 +2,21 @@ import { put, call, takeEvery, select } from 'redux-saga/effects';
 import { PHOTOS } from '../constants';
 import { getPhotosOfAnAlbum, uploadPhotoApi } from '../api/index';
 
-export const getPage = state => state.photosReducer.page;
+export const getUrl = state => state.photosReducer.url;
 export const getToken = state => state.loginReducer.user.token;
 
 export function* handleImagesLoad(data) {
     try {
         console.log('handleImagesLoad called');
-        yield put({ type: PHOTOS.START_ISLOADING });
         data.token = yield select(getToken);
-        data.page = yield select(getPage);
-        const images = yield call(getPhotosOfAnAlbum, data);
-        yield put({ type: PHOTOS.STOP_ISLOADING });
-        yield put({ type: PHOTOS.LOAD_SUCCESS, images });
+        let url = yield select(getUrl)
+        data.url = url;
+        if (url) {
+            yield put({ type: PHOTOS.START_ISLOADING });
+            const images = yield call(getPhotosOfAnAlbum, data);
+            yield put({ type: PHOTOS.STOP_ISLOADING });
+            yield put({ type: PHOTOS.LOAD_SUCCESS, images });
+        }
     } catch (error) {
         yield put({ type: PHOTOS.STOP_ISLOADING });
         // should set err
