@@ -11,6 +11,7 @@ const deviceWidth = Dimensions.get('window').width;
 import { uploadPhotos, resetPhotosMessages } from '../../../__redux/actions';
 import { connect } from 'react-redux';
 import { Error, Success } from 'utils/modals/alerts';
+import { ScrollView } from 'react-native-gesture-handler';
 
 
 const UploadPhoto = props => {
@@ -196,7 +197,7 @@ const UploadPhoto = props => {
                                 renderHeader={renderHeader}
                                 renderFooter={renderFooter}>
                                 {photos.map((url, index) => (
-                                    <>
+                                    <ScrollView>
                                         <Image
                                             key={url.path}
                                             style={styles.sliderImage}
@@ -229,7 +230,7 @@ const UploadPhoto = props => {
                                                 style={styles.inputIcon}
                                             />
                                         </Item>
-                                    </>
+                                    </ScrollView>
                                 ))}
                             </ImageCarousel>
 

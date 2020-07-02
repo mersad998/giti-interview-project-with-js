@@ -31,6 +31,18 @@ const photosReducer = (state = { photos: [], url: 'firstLoad', isLoading: false,
         case PHOTOS.ADD_PHOTO_FAILED:
             return { ...state, errorMessage: 'خطایی در ذخیره تصویر . لطفا بعدا تلاش نمایید' };
             break
+        case PHOTOS.DELETE_PHOTO_SUCCESS:
+            return { ...state, successMessage: 'تصویر با موفقیت حذف شد' };
+            break;
+        case PHOTOS.DELETE_PHOTO_FAILED:
+            return { ...state, errorMessage: 'عملیات انجام نشد . لطفا مجددا تلاش نمایید' };
+            break;
+        case PHOTOS.EDIT_PHOTO_SUCCESS:
+            return { ...state, successMessage: 'تصویر با موفقیت ویرایش شد' };
+            break;
+        case PHOTOS.EDIT_PHOTO_FAILED:
+            return { ...state, errorMessage: 'عملیات انجام نشد . لطفا مجددا تلاش نمایید' };
+            break;
         default:
             return state
             break;

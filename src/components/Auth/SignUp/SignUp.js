@@ -6,19 +6,19 @@ import { MyHeader, CoustomButtonComponent } from 'utils/constants/elements';
 import { Input, Icon, Item, Content } from 'native-base';
 import { useForm } from "react-hook-form";
 import { emailRegex } from 'utils/constants/regex'
-import { Error } from 'utils/modals/alerts';
-import { requestUserSignup } from '../../../../__redux/actions/authActions';
+import { Error, Success } from 'utils/modals/alerts';
+import { requestUserSignup, resetMessages } from '../../../../__redux/actions/authActions';
 import { connect } from 'react-redux';
 
 const SignUp = props => {
   const { register, setValue, handleSubmit } = useForm();
+
   const [errMessage, setErrMessage] = useState('');
+  const [showPass, setShowPass] = useState(false);
+
   const EmailRef = useRef(null);
   const PasswordRef = useRef(null);
   const RePasswordRef = useRef(null);
-
-  const [showPass, setShowPass] = useState(false);
-
 
   useEffect(() => {
     console.log('use effect SignUp');
@@ -57,12 +57,15 @@ const SignUp = props => {
   const resetError = () => {
     setErrMessage('');
   };
-
-  const changeShowPass = () => setShowPass(!showPass);
-
   const onBackPress = () => {
     props.navigation.goBack();
   };
+  const changeShowPass = () => setShowPass(!showPass);
+  const onSignUpCompelete = () => {
+    props.resetMessages();
+    onBackPress()
+  }
+
   return (
     <>
       <MyHeader Title="ثبت نام" onBackPress={onBackPress} />
@@ -72,6 +75,16 @@ const SignUp = props => {
           visible={errMessage != ''}
           text={errMessage}
           confirm={resetError}
+        />
+        <Error
+          visible={props.errorMessage != ''}
+          text={props.errorMessage}
+          confirm={props.resetMessages}
+        />
+        <Success
+          visible={props.successMessage != ''}
+          text={props.successMessage}
+          confirm={onSignUpCompelete}
         />
         <Image
           source={require('assets/logo.png')}
@@ -185,7 +198,6 @@ const SignUp = props => {
 const styles = StyleSheet.create({
   Container: {
     flex: 1,
-    // alignItems: 'center',
     backgroundColor: lightGray,
   },
   image: {
@@ -276,11 +288,13 @@ const styles = StyleSheet.create({
 });
 
 const mapStateToProps = state => ({
-  user: state.loginReducer.user,
+  errorMessage: state.loginReducer.errorMessage,
+  successMessage: state.loginReducer.successMessage,
   isLoading: state.loginReducer.isLoading
 });
 const mapDispatchToProps = dispatch => ({
   requestUserSignup: data => requestUserSignup({ data, dispatch }),
+  resetMessages: data => resetMessages({ data, dispatch }),
 });
 
 export default connect(

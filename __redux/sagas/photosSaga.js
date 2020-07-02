@@ -1,6 +1,6 @@
 import { put, call, takeEvery, select } from 'redux-saga/effects';
 import { PHOTOS } from '../constants';
-import { getPhotosOfAnAlbum, uploadPhotoApi } from '../api/index';
+import { getPhotosOfAnAlbum, uploadPhotoApi, editPhotoApi, deletePhotoApi } from '../api/index';
 
 export const getUrl = state => state.photosReducer.url;
 export const getToken = state => state.loginReducer.user.token;
@@ -38,8 +38,37 @@ export function* handleUploadPhotos(data) {
         console.log(error);
     }
 }
+export function* handleEditPhoto(data) {
+    try {
+        console.log('handleEditPhoto called');
+        data.token = yield select(getToken);
+        yield put({ type: PHOTOS.START_ISLOADING });
+        const resault = yield call(editPhotoApi, data);
+        yield put({ type: PHOTOS.STOP_ISLOADING });
+        yield put({ type: PHOTOS.EDIT_PHOTO_SUCCESS, resault });
+
+    } catch (error) {
+        yield put({ type: PHOTOS.STOP_ISLOADING });
+        yield put({ type: PHOTOS.EDIT_PHOTO_FAILED, images });
+    }
+}
+export function* handleDeletePhoto(data) {
+    try {
+        console.log('handleDeletePhoto called');
+        data.token = yield select(getToken);
+        yield put({ type: PHOTOS.START_ISLOADING });
+        const resault = yield call(deletePhotoApi, data);
+        yield put({ type: PHOTOS.STOP_ISLOADING });
+        yield put({ type: PHOTOS.DELETE_PHOTO_SUCCESS, resault });
+    } catch (error) {
+        yield put({ type: PHOTOS.STOP_ISLOADING });
+        yield put({ type: PHOTOS.DELETE_PHOTO_FAILED, error });
+    }
+}
 
 export default function* watchImagesLoad() {
     yield takeEvery(PHOTOS.LOAD, handleImagesLoad);
     yield takeEvery(PHOTOS.UPLOAD_PHOTOS, handleUploadPhotos);
+    yield takeEvery(PHOTOS.EDIT_PHOTO, handleEditPhoto);
+    yield takeEvery(PHOTOS.DELETE_PHOTO, handleDeletePhoto);
 }

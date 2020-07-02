@@ -32,9 +32,9 @@ export function* handleSignupRequest(data) {
         console.log('saga result : ');
         console.log(result);
         yield put({ type: AUTH.STOP_ISLOADING });
-        // yield put({ type: AUTH.LOGIN_SUCCESS, result });
+        yield put({ type: AUTH.SIGNUP_SUCCESS, result });
     } catch (error) {
-        // yield put({ type: AUTH.LOGIN_FAILURE, error });
+        yield put({ type: AUTH.SIGNUP_FAILURE, error });
         yield put({ type: AUTH.STOP_ISLOADING });
         console.log('saga fail');
         console.log(error);

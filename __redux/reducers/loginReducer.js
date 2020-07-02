@@ -59,6 +59,12 @@ const loginReducer = (state = { token: '', successMessage: '', errorMessage: '',
         case AUTH.RESET_MESSAGES:
             return { ...state, errorMessage: '', successMessage: '' };
             break;
+        case AUTH.SIGNUP_SUCCESS:
+            return { ...state, successMessage: 'ثبت نام با موفقیت انجام شد.' };
+            break;
+        case AUTH.SIGNUP_FAILURE:
+            return { ...state, errorMessage: 'عملیات انجام نشد . لطفا مجددا تلاش نمایید' };
+            break;
         default:
             return state
             break;

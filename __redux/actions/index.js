@@ -52,6 +52,12 @@ const clearPhotos = ({ data, dispatch }) => {
 const resetPhotosMessages = ({ data, dispatch }) => {
     dispatch({ type: PHOTOS.RESET_MESSAGES, data })
 }
+const deletePhoto = ({ data, dispatch }) => {
+    dispatch({ type: PHOTOS.DELETE_PHOTO, data })
+}
+const editPhoto = ({ data, dispatch }) => {
+    dispatch({ type: PHOTOS.EDIT_PHOTO, data })
+}
 export {
     loadAlbums,
     setAlbums,
@@ -65,5 +71,7 @@ export {
     setAlbumsPhotosLoadError,
     uploadPhotos,
     clearPhotos,
-    resetPhotosMessages
+    resetPhotosMessages,
+    deletePhoto,
+    editPhoto
 };

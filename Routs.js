@@ -29,7 +29,7 @@ export default function Routs() {
       Images,
       SignUp,
       Detailes,
-      UploadPhoto
+      UploadPhoto,
     },
     {
       initialRouteName: 'SplashScreen',

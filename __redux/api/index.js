@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { loginUrl, signUpUrl, getAllAlbumsUrl, selectAlbumUrl } from './urls'
+import { loginUrl, signUpUrl, getAllAlbumsUrl, selectAlbumUrl, selectImageUrl } from './urls'
 
 export const LoginApi = (data) => {
     return new Promise(async (resolve, reject) => {
@@ -27,9 +27,9 @@ export const SignupApi = (data) => {
     return new Promise(async (resolve, reject) => {
         axios
             .post(signUpUrl, {
-                username: data.username,
-                email: data.email,
-                password: data.password
+                username: data.data.username,
+                email: data.data.email,
+                password: data.data.password
             })
             .then(res => {
                 console.log('status 200');
@@ -58,6 +58,7 @@ export const getAllAlbums = (token) => {
             })
             .catch(err => {
                 console.log('err in api');
+                console.log(err);
                 reject(err)
             });
     });
@@ -115,6 +116,8 @@ export const getPhotosOfAnAlbum = (data) => {
             })
             .catch(err => {
                 console.log('err in api');
+                console.log(err);
+
                 reject(err)
             });
     });
@@ -185,6 +188,74 @@ export const editAnAlbumApi = (data) => {
         await axios
             .put(url, { name: data.data.newName }, {
                 headers: {
+                    Authorization: token,
+                },
+            })
+            .then(res => {
+                console.log('status 200');
+                resolve(res.data)
+            })
+            .catch(err => {
+                console.log('err in api');
+                reject(err)
+            });
+    });
+};
+export const deletePhotoApi = (data) => {
+
+    const token = 'JWT ' + data.token;
+    const url = selectImageUrl + data.data.id;
+    console.log(url, token);
+    return new Promise(async (resolve, reject) => {
+        await axios
+            .delete(url, {
+                headers: {
+                    Authorization: token,
+                },
+            })
+            .then(res => {
+                console.log('status 200');
+                resolve(res.data)
+            })
+            .catch(err => {
+                console.log('err in api');
+                reject(err)
+            });
+    });
+};
+export const editPhotoApi = (data) => {
+    console.log('in api');
+    console.log(data);
+    const token = 'JWT ' + data.token;
+    const url = selectImageUrl + data.data.id;
+    console.log(url, token);
+
+    let formData = new FormData();
+    if (data.data.title) {
+        formData.append('title', data.data.title);
+    }
+    if (data.data.desc) {
+        formData.append('desc', data.data.desc);
+    }
+    if (data.data.img) {
+        let localUri = data.data.img;
+        let filename = localUri.split('/').pop();
+        let match = /\.(\w+)$/.exec(filename);
+        let type = match ? `image/${match[1]}` : 'image';
+        formData.append('img', {
+            uri: localUri,
+            name: filename,
+            type,
+        });
+    }
+
+    console.log(formData);
+
+    return new Promise(async (resolve, reject) => {
+        await axios
+            .patch(url, formData, {
+                headers: {
+                    'Content-type': 'multipart/form-data',
                     Authorization: token,
                 },
             })

@@ -19,8 +19,11 @@ import SideMenu from 'react-native-side-menu';
 const deviceWidth = Dimensions.get('window').width;
 import { Error, Success, Delete } from 'utils/modals/alerts';
 import SelectModal from 'utils/modals/select'
+import { Content } from 'native-base';
 const txtDelete = 'حذف آلبوم';
 const txtEdit = 'ویرایش نام آلبوم';
+const deviceHeight = Dimensions.get('window').height;
+
 
 
 const Home = (props) => {
@@ -220,8 +223,16 @@ const Home = (props) => {
             }
           />
         ) : null}
-        {!props.albums && !props.isLoading ? (
-          <CoustomTextComponent>آلبومی برای نمایش وجود ندارد</CoustomTextComponent>
+        {props.albums && props.albums.length < 1 && !props.isLoading ? (
+          <Content
+            refreshControl={
+              <RefreshControl
+                refreshing={props.isLoading}
+                onRefresh={loadPage}
+              />
+            } >
+            <CoustomTextComponent style={styles.noPhotoText}>آلبومی برای نمایش وجود ندارد</CoustomTextComponent>
+          </Content>
         ) : null}
 
       </View>
@@ -243,13 +254,12 @@ const styles = StyleSheet.create({
   CartContainer: {
     width: deviceWidth - 20,
     height: deviceWidth - 50,
-    margin: 2,
+    margin: 10,
     alignSelf: 'center',
     borderColor: purple,
     borderWidth: 0.5,
     backgroundColor: purple,
     borderRadius: 30
-
   }, CardTitle: {
     width: '84%',
     height: 30,
@@ -279,6 +289,8 @@ const styles = StyleSheet.create({
     borderColor: 'grey',
     backgroundColor: lightGray,
     justifyContent: 'center'
+  }, noPhotoText: {
+    marginTop: deviceHeight / 2.5
   }
 });
 const mapStateToProps = state => ({

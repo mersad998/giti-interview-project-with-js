@@ -1,28 +1,211 @@
 import React, { useEffect, useState } from 'react';
-import { View, StyleSheet, Image, StatusBar } from 'react-native';
-import { lightGray, purple } from 'utils/constants/colors';
+import { View, StyleSheet, Image, StatusBar, TouchableOpacity, BackHandler } from 'react-native';
+import { lightGray, purple, white, BootstrapDanger, BootstrapPrimary, BootstrapWarning } from 'utils/constants/colors';
 import { CoustomTextComponent } from 'utils/constants/elements';
 import { MyHeader } from 'utils/constants/elements';
+import { Icon, Item, Input } from 'native-base'
+import { connect } from 'react-redux';
+import { deletePhoto, editPhoto, resetPhotosMessages } from '../../../__redux/actions/index';
+import { Error, Success, Delete } from 'utils/modals/alerts';
+import SelectModal from 'utils/modals/select'
+import ImagePicker from 'react-native-image-crop-picker';
+import { ScrollView } from 'react-native-gesture-handler';
+const txtFromCamera = 'دوربین';
+const txtFromGallery = 'گالری';
 
-export default function Detailes(props) {
+
+const Detailes = props => {
   const [item, setItem] = useState(null);
+  const [PickerItemsVisible, setPickerItemsVisible] = useState(false); // مودال انتخاب دوربین یا گالری
+  const [deleteMsg, setDeleteMsg] = useState('');
+  const [editingMode, setEditingMode] = useState(false)
+  const [errMessage, setErrMessage] = useState('');
+  const [newName, setNewName] = useState('');
+  const [newDesc, setNewDesc] = useState('');
+  const [newPic, setNewPic] = useState('');
 
+  const showPickerItems = () => {
+    setPickerItemsVisible(true);
+  };
+  const dissmissPickerItems = () => {
+    setPickerItemsVisible(false);
+  };
+
+  const onChooseImage = image => {
+    console.log(image.path);
+
+    setNewPic(image.path)
+  }
+  const OnSetImage = (type) => {
+    if (type == txtFromCamera) {
+      try {
+        ImagePicker.openCamera({
+          width: 300,
+          height: 400,
+          cropping: true,
+        }).then(image => {
+          onChooseImage(image);
+        });
+      } catch (error) {
+        props.setErrMessage(
+          'خطایی در باز کردن دوربین اتفاق افتاده . لطفا از روش انتخاب از گالری استفاده نمایید یا دسترسی به دوربین را از منوی تنظیمات گوشی خود برای این اپلیکیشن فراهم آورید',
+        );
+        console.log('errrrrrrrrrr');
+      }
+    } else if (type == txtFromGallery) {
+      try {
+        ImagePicker.openPicker({
+          width: 300,
+          height: 400,
+          cropping: true,
+        }).then(image => {
+          onChooseImage(image);
+        });
+      } catch (error) {
+        props.setErrMessage(
+          'خطایی در باز کردن گالری اتفاق افتاده . لطفا از روش دوربین استفاده نمایید یا دسترسی به گالری را از منوی تنظیمات گوشی خود برای این اپلیکیشن فراهم آورید',
+        );
+      }
+    }
+    dissmissPickerItems();
+  }
+  const onBackPress = () => {
+    console.log('back called');
+    console.log(editingMode);
+
+    if (editingMode) {
+      setEditingMode(false)
+      return true
+    } else {
+      props.navigation.goBack();
+      return true
+    }
+  };
   useEffect(() => {
+
     const passedItem = props.navigation.getParam('item')
     console.log('item in detailes page :');
     console.log(passedItem);
     setItem(passedItem)
+    setNewName(passedItem.title)
+    setNewDesc(passedItem.desc)
+    setNewPic(passedItem.img)
+
   }, []);
 
-  const onBackPress = () => {
+  useEffect(() => {
+    var backHandler = BackHandler.addEventListener(
+      'hardwareBackPress',
+      onBackPress,
+    );
+
+    return function cleanup() {
+      backHandler.remove();
+    };
+  }, [editingMode]);
+
+  const deletePhoto = () => {
+    let model = { id: item.id }
+    props.deletePhoto(model)
+  }
+  const editPhoto = () => {
+  }
+  const resetDeleteMsg = () => {
+    setDeleteMsg('')
+  }
+  const showDeleteMsg = () => {
+    let msg = 'آیا برای حذف تصویر مطمئن هستید ؟'
+    setDeleteMsg(msg)
+  }
+  const onActionCompelete = () => {
+    props.resetPhotosMessages();
     props.navigation.goBack();
+  }
+  const onConfirmDelete = () => {
+    resetDeleteMsg()
+    deletePhoto()
+  }
+  const turnOnEditingMode = () => {
+    setEditingMode(true)
+  }
+  const resetError = () => {
+    setErrMessage('');
   };
+  const onCheckPress = () => {
+    let changes = {}
+
+    if (newName !== item.title) {
+      changes.title = newName
+    }
+    if (newDesc !== item.desc) {
+      changes.desc = newDesc
+    }
+    if (newPic !== item.img) {
+      changes.img = newPic
+    }
+    console.log(changes);
+    if (changes.title || changes.desc || changes.img) {
+      changes.id = item.id
+      props.editPhoto(changes)
+    } else {
+      setErrMessage('هیچ مقداری تغییر داده نشده')
+    }
+  }
+
   return (
     <>
-      <MyHeader Title="جزئیات عکس" onBackPress={onBackPress} />
+      <MyHeader Title={editingMode ? 'ویرایش عکس' : "جزئیات عکس"} onBackPress={onBackPress} onCheckPress={editingMode ? onCheckPress : null} />
       <StatusBar backgroundColor="#470425" />
-      {item ? (
+      <Error
+        visible={props.errorMessage != ''}
+        text={props.errorMessage}
+        confirm={props.resetPhotosMessages}
+      />
+      <Error
+        visible={errMessage != ''}
+        text={errMessage}
+        confirm={resetError}
+      />
+      <Success
+        visible={props.successMessage != ''}
+        text={props.successMessage}
+        confirm={onActionCompelete}
+      />
+      <Delete
+        visible={deleteMsg != ''}
+        text={deleteMsg}
+        confirm={onConfirmDelete}
+        dismiss={resetDeleteMsg}
+      />
+      <SelectModal
+        visible={PickerItemsVisible}
+        dissmiss={dissmissPickerItems}
+        items={[{ Name: txtFromCamera }, { Name: txtFromGallery }]}
+        confirm={OnSetImage}
+      />
+      {item && !editingMode ? (
         <View style={styles.Container}>
+          <View style={styles.buttonsRowView}>
+            <TouchableOpacity style={styles.buttons(BootstrapDanger)} onPress={showDeleteMsg}>
+              <Icon
+                name="trash"
+                type="FontAwesome5"
+                style={styles.icons}
+              />
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.buttons(BootstrapWarning)} onPress={turnOnEditingMode}>
+              <Icon
+                name="pen"
+                type="FontAwesome5"
+                style={styles.icons}
+              />
+            </TouchableOpacity>
+          </View>
+          <Image
+            resizeMode={'stretch'}
+            source={{ uri: item.img }}
+            style={styles.Image}
+          />
           <CoustomTextComponent style={styles.HeadText}>
             جزئیات عکس {item.title}
           </CoustomTextComponent>
@@ -32,7 +215,7 @@ export default function Detailes(props) {
             </CoustomTextComponent>
             <CoustomTextComponent style={styles.text}>
               تاریخ ایجاد :
-        </CoustomTextComponent>
+            </CoustomTextComponent>
           </View>
           <View style={styles.rowViewNoborder}>
             <CoustomTextComponent style={styles.text} >
@@ -43,6 +226,59 @@ export default function Detailes(props) {
         </CoustomTextComponent>
           </View>
         </View>
+      ) : null}
+      {item && editingMode ? (
+        <ScrollView style={styles.ContainerEditing}>
+          <TouchableOpacity style={styles.newImageContainer} onPress={showPickerItems}>
+            <Image
+              resizeMode={'stretch'}
+              source={{ uri: newPic }}
+              style={styles.Image}
+            />
+            <CoustomTextComponent>برای ویرایش روی تصویر کلیک کنید</CoustomTextComponent>
+          </TouchableOpacity>
+
+          <View style={styles.rowView}>
+            <Item rounded style={styles.inputItem}>
+              <Input
+                placeholder="نام جدید"
+                placeholderTextColor={'gray'}
+                style={styles.input}
+                value={newName}
+                onChangeText={setNewName}
+                editable={!props.isLoading}
+              />
+              <Icon
+                name="pencil"
+                type="MaterialCommunityIcons"
+                style={styles.inputIcon}
+              />
+            </Item>
+            <CoustomTextComponent style={styles.text}>
+              نام عکس :
+            </CoustomTextComponent>
+          </View>
+          <View style={styles.rowViewNoborder}>
+            <Item rounded style={styles.inputItem}>
+              <Input
+                placeholder="توضیحات جدید"
+                placeholderTextColor={'gray'}
+                style={styles.input}
+                value={newDesc}
+                onChangeText={setNewDesc}
+                editable={!props.isLoading}
+              />
+              <Icon
+                name="pencil"
+                type="MaterialCommunityIcons"
+                style={styles.inputIcon}
+              />
+            </Item>
+            <CoustomTextComponent style={styles.text}>
+              توضیحات عکس :
+            </CoustomTextComponent>
+          </View>
+        </ScrollView>
       ) : null}
       <Image
         resizeMode={'stretch'}
@@ -58,8 +294,29 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     backgroundColor: lightGray,
-  },
-  footerImage: {
+  }, ContainerEditing: {
+    flex: 1,
+    backgroundColor: lightGray,
+  }, buttonsRowView: {
+    alignSelf: 'flex-start',
+    height: 45,
+    width: 120,
+    marginLeft: 20,
+    marginTop: 10,
+    flexDirection: 'row',
+  }, buttons: color => {
+    return {
+      flex: 1,
+      padding: 1,
+      margin: 2,
+      justifyContent: 'center',
+      alignItems: 'center',
+      backgroundColor: color
+    }
+  }, icons: {
+    fontSize: 20,
+    color: white
+  }, footerImage: {
     width: '100%',
     height: 100,
     alignSelf: 'center',
@@ -77,13 +334,61 @@ const styles = StyleSheet.create({
     padding: 5,
     borderBottomColor: 'grey',
     borderBottomWidth: 0.5,
+    alignSelf: 'center',
     marginTop: 20
   }, rowViewNoborder: {
     flexDirection: 'row',
     width: '90%',
     justifyContent: 'space-between',
     padding: 5,
+    alignSelf: 'center'
   }, text: {
     flex: 1
+  }, Image: {
+    width: 200,
+    height: 200,
+    margin: 10,
+    borderColor: purple,
+    borderWidth: 1
+  }, inputItem: {
+    backgroundColor: white,
+    borderColor: purple,
+    marginBottom: 8,
+    height: 45,
+    borderRadius: 8,
+    width: '60%',
+    alignSelf: 'center',
+  },
+  input: {
+    textAlign: 'right',
+    color: purple,
+    paddingLeft: 32,
+    fontFamily: 'IRANSansMobile(FaNum)',
+    fontSize: 14,
+  },
+  inputIcon: {
+    color: purple,
+    fontSize: 20,
+    marginLeft: 5,
+  }, newImageContainer: {
+    marginTop: 40,
+    alignItems: 'center',
+    justifyContent: 'center'
   }
 });
+
+const mapStateToProps = state => ({
+  successMessage: state.photosReducer.successMessage,
+  errorMessage: state.photosReducer.errorMessage,
+  isLoading: state.photosReducer.isLoading
+});
+const mapDispatchToProps = dispatch => ({
+  deletePhoto: data => deletePhoto({ data, dispatch }),
+  resetPhotosMessages: data => resetPhotosMessages({ data, dispatch }),
+  editPhoto: data => editPhoto({ data, dispatch }),
+});
+
+export default connect(
+  mapStateToProps,
+  mapDispatchToProps,
+)(Detailes);
